@@ -184,7 +184,7 @@
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 20 &bull; Built with Claude</span>
+    <span class="version">App version 21 &bull; Built with Claude</span>
   </div>
 </div>
 
@@ -451,33 +451,60 @@ function parseGolferScore(c) {
   return null;
 }
 
-function parseThruField(c) {
-  // Try multiple common locations for "holes completed". ESPN's leaderboard
-  // endpoint is inconsistent about where this lives — on some responses it's
-  // at status.thru, on others it's embedded in linescores, position, or the
-  // top level. Return "" if we genuinely can't find it (distinct from "0").
-  let thru =
-    c.status?.thru ??
-    c.thru ??
-    c.status?.holesPlayed ??
-    c.status?.position?.thru ??
-    c.status?.hole;
+// Derive current-round thru and player state from the linescores array.
+// ESPN's /leaderboard endpoint for PGA does NOT expose competitor.status at
+// all — instead, each competitor has a linescores[] with one entry per round
+// that has been played or is being played. Each round entry has its own
+// nested linescores[] with one entry per hole completed.
+//
+// Example (Justin Rose mid-R2):
+//   linescores: [
+//     { period: 1, linescores: [18 hole entries] },   // finished R1
+//     { period: 2, linescores: [11 hole entries] }    // thru 11 in R2
+//   ]
+function getRoundLinescore(c, round) {
+  if (!Array.isArray(c.linescores)) return null;
+  return c.linescores.find(x => x.period === round) || null;
+}
 
-  // Fallback: check linescores for the latest round with a thru value
-  if ((thru === undefined || thru === null) && Array.isArray(c.linescores)) {
-    for (let i = c.linescores.length - 1; i >= 0; i--) {
-      const ls = c.linescores[i];
-      if (ls && (ls.thru !== undefined && ls.thru !== null)) {
-        thru = ls.thru;
-        break;
-      }
+function parseThruField(c, currentRound) {
+  const roundEntry = getRoundLinescore(c, currentRound);
+  if (!roundEntry) return ""; // round not started yet
+  const holes = roundEntry.linescores;
+  if (!Array.isArray(holes) || holes.length === 0) return "";
+  if (holes.length >= 18) return "F";
+  return holes.length.toString();
+}
+
+// Per-player state for the current round:
+//   "in"   = on the course right now (1–17 holes played)
+//   "post" = finished this round
+//   "pre"  = hasn't teed off yet this round
+function parsePlayerState(c, currentRound) {
+  const roundEntry = getRoundLinescore(c, currentRound);
+  if (!roundEntry) return "pre";
+  const holes = roundEntry.linescores;
+  if (!Array.isArray(holes) || holes.length === 0) return "pre";
+  if (holes.length >= 18) return "post";
+  return "in";
+}
+
+// Pull the tee time for a given round out of the linescores statistics block.
+// ESPN stuffs it in the last stat entry as a display string like
+// "Fri Apr 10 09:55:00 PDT 2026".
+function parseRoundTeeTime(c, round) {
+  const roundEntry = getRoundLinescore(c, round);
+  const stats = roundEntry?.statistics?.categories?.[0]?.stats;
+  if (!Array.isArray(stats)) return "";
+  // Tee time is typically the last stat entry, and it's the only one that's
+  // a date-looking string rather than a number.
+  for (let i = stats.length - 1; i >= 0; i--) {
+    const v = stats[i]?.displayValue;
+    if (typeof v === "string" && /\d{4}/.test(v) && /[A-Za-z]{3}/.test(v)) {
+      return v;
     }
   }
-
-  if (thru === undefined || thru === null || thru === "") return "";
-  if (thru === 18 || thru === "18") return "F";
-  if (typeof thru === "number") return thru.toString();
-  return thru.toString();
+  return "";
 }
 
 async function fetchFromUrl(url) {
@@ -522,6 +549,19 @@ async function fetchScores() {
     tournamentStatus = event.status?.type?.name || event.status?.type?.state || "unknown";
     tournamentRound = event.status?.type?.detail || event.status?.type?.description || "";
 
+    // Compute the current round up front — we need it to parse per-player
+    // thru/state from each competitor's linescores array. Calendar wins;
+    // ESPN's detail string is the fallback.
+    const statusDetailEarly = (event.status?.type?.detail || "").toLowerCase();
+    const scheduledRoundEarly = getScheduledRound();
+    let roundForParsing;
+    if (scheduledRoundEarly !== null) {
+      roundForParsing = scheduledRoundEarly;
+    } else {
+      const m = statusDetailEarly.match(/round\s*(\d)/i);
+      roundForParsing = m ? parseInt(m[1], 10) : (event.status?.period || 1);
+    }
+
     const competitors = competition.competitors || [];
 
     // DEBUG: dump the first competitor once, so we can see the real structure
@@ -534,7 +574,8 @@ async function fetchScores() {
           name: c.athlete?.displayName,
           rawScore: c.score,
           parsedScore: parseGolferScore(c),
-          thru: parseThruField(c)
+          thru: parseThruField(c, roundForParsing),
+          state: parsePlayerState(c, roundForParsing)
         });
       });
       debugDumped = true;
@@ -551,29 +592,22 @@ async function fetchScores() {
     for (const c of competitors) {
       const name = c.athlete?.displayName || c.athlete?.fullName || c.athlete?.shortName || "";
       const score = parseGolferScore(c);
-      const thru = parseThruField(c);
+      const thru = parseThruField(c, roundForParsing);
+      const playerState = parsePlayerState(c, roundForParsing);
 
-      // Track per-player current-round state from thru.
-      // IMPORTANT: missing/empty thru is "unknown", NOT "not started" — ESPN
-      // often omits this field entirely, and we must not let missing data
-      // masquerade as a confident "pre-tee" signal.
-      const thruNum = parseInt(thru, 10);
-      if (thru === "F" || thruNum === 18) {
-        finishedCurrentRoundCount++;
-      } else if (!isNaN(thruNum) && thruNum >= 1 && thruNum <= 17) {
+      // Count players by derived current-round state
+      if (playerState === "in") {
         activelyPlayingCount++;
-      } else if (thru === "0" || thruNum === 0) {
+      } else if (playerState === "post") {
+        finishedCurrentRoundCount++;
+      } else if (playerState === "pre") {
         notStartedCurrentRoundCount++;
       } else {
-        // thru is "" / null / unparseable — we genuinely don't know
         unknownThruCount++;
       }
 
       // Add to full leaderboard regardless of whether it matches a pool pick
       if (name && score !== null) {
-        // Per-player live state: "in" = on the course, "post" = finished,
-        // "pre" = not yet teed off. ESPN puts this at competitor.status.type.state.
-        const playerState = (c.status?.type?.state || "").toLowerCase();
         newLeaderboard.push({ name, score, thru, playerState });
       }
 
