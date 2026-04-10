@@ -266,6 +266,22 @@ let playerScores = { ...FALLBACK_SCORES }; // Start with fallback so page render
 let tournamentStatus = "unknown";
 let tournamentRound = "";
 let usingFallback = true; // Will flip to false on successful API fetch
+let liveState = "ROUND_COMPLETE"; // LIVE | ROUND_COMPLETE | PRE_ROUND | UNKNOWN
+
+// Full tournament leaderboard (independent of pool picks) — top 10 for the leaderboard widget
+const FALLBACK_LEADERBOARD = [
+  { name: "Rory McIlroy",     score: -5, thru: "F" },
+  { name: "Sam Burns",        score: -5, thru: "F" },
+  { name: "Kurt Kitayama",    score: -3, thru: "F" },
+  { name: "Jason Day",        score: -3, thru: "F" },
+  { name: "Patrick Reed",     score: -3, thru: "F" },
+  { name: "Scottie Scheffler",score: -2, thru: "F" },
+  { name: "Xander Schauffele",score: -2, thru: "F" },
+  { name: "Justin Rose",      score: -2, thru: "F" },
+  { name: "Shane Lowry",      score: -2, thru: "F" },
+  { name: "Tommy Fleetwood",  score: -1, thru: "F" }
+];
+let fullLeaderboard = [...FALLBACK_LEADERBOARD];
 
 // ── ESPN API ──
 // Try the leaderboard endpoint first (more detailed), fallback to scoreboard
@@ -451,20 +467,40 @@ async function fetchScores() {
     }
 
     const newScores = {};
+    const newLeaderboard = [];
     let matchedCount = 0;
+    let activelyPlayingCount = 0;
+    let finishedRoundCount = 0;
+    let notStartedCount = 0;
 
     for (const c of competitors) {
       const name = c.athlete?.displayName || c.athlete?.fullName || c.athlete?.shortName || "";
-      const shortName = matchPlayer(name);
-      if (!shortName) continue;
-
       const score = parseGolferScore(c);
-      if (score === null) continue; // Skip if we genuinely can't parse
+      const thru = parseThruField(c);
+
+      // Track live state from thru values
+      const thruNum = parseInt(thru, 10);
+      if (thru === "F" || thruNum === 18) {
+        finishedRoundCount++;
+      } else if (!isNaN(thruNum) && thruNum >= 1 && thruNum <= 17) {
+        activelyPlayingCount++;
+      } else {
+        notStartedCount++;
+      }
+
+      // Add to full leaderboard regardless of whether it matches a pool pick
+      if (name && score !== null) {
+        newLeaderboard.push({ name, score, thru });
+      }
+
+      // Try to match for pool standings
+      const shortName = matchPlayer(name);
+      if (!shortName || score === null) continue;
       matchedCount++;
 
       newScores[shortName] = {
         score,
-        thru: parseThruField(c),
+        thru,
         position: c.status?.position?.displayName || "",
         espnName: name,
         source: "live"
@@ -475,11 +511,27 @@ async function fetchScores() {
       throw new Error(`Matched 0 players (processed ${competitors.length}). Check console for API structure.`);
     }
 
+    // Determine actual live state from player activity
+    if (activelyPlayingCount > 0) {
+      liveState = "LIVE";
+    } else if (finishedRoundCount > competitors.length / 2) {
+      liveState = "ROUND_COMPLETE";
+    } else if (notStartedCount > competitors.length / 2) {
+      liveState = "PRE_ROUND";
+    } else {
+      liveState = "UNKNOWN";
+    }
+    console.log(`Live state: ${liveState} (playing: ${activelyPlayingCount}, finished: ${finishedRoundCount}, not started: ${notStartedCount})`);
+
+    // Sort full leaderboard by score ascending
+    newLeaderboard.sort((a, b) => a.score - b.score);
+    fullLeaderboard = newLeaderboard;
+
     // Merge: live data overrides fallback, but keep fallback for unmatched players
     playerScores = { ...FALLBACK_SCORES, ...newScores };
     usingFallback = false;
     hideError();
-    console.log(`✓ Fetched ${matchedCount} player scores from ESPN`);
+    console.log(`✓ Fetched ${matchedCount} pool-pick scores + ${newLeaderboard.length} total players from ESPN`);
     return true;
   } catch (err) {
     console.error("Parse error:", err);
@@ -491,6 +543,7 @@ async function fetchScores() {
 function showError(msg) {
   usingFallback = true;
   playerScores = { ...FALLBACK_SCORES }; // Reset to fallback
+  fullLeaderboard = [...FALLBACK_LEADERBOARD]; // Reset leaderboard too
   const el = document.getElementById("errorMsg");
   el.style.display = "block";
   el.innerHTML = `<strong>Live scores from ESPN unavailable</strong><span class="sub">Showing fallback data from end of Day 1 (Thursday). Will retry every 5 minutes.</span>`;
@@ -516,31 +569,38 @@ function formatScore(score) {
 
 function renderLeaderboard() {
   const container = document.getElementById("topPlayers");
-  const sorted = Object.entries(playerScores)
-    .sort((a, b) => a[1].score - b[1].score)
-    .slice(0, 10);
+  const top10 = fullLeaderboard.slice(0, 10);
 
-  if (sorted.length === 0) {
+  if (top10.length === 0) {
     container.innerHTML = '<div style="color:var(--muted);font-size:.85rem">No leaderboard data available yet.</div>';
     return;
   }
 
+  // Compute positions with ties (T1, T1, T3, etc.)
   let html = "";
-  let lastScore = null;
-  let lastPos = 0;
+  let positions = [];
+  top10.forEach((p, idx) => {
+    if (idx === 0) {
+      positions.push(1);
+    } else if (p.score === top10[idx - 1].score) {
+      positions.push(positions[idx - 1]);
+    } else {
+      positions.push(idx + 1);
+    }
+  });
 
-  sorted.forEach(([name, data], idx) => {
-    const pos = data.score !== lastScore ? idx + 1 : lastPos;
-    lastScore = data.score;
-    lastPos = pos;
-    const prefix = pos === lastPos && idx > 0 && sorted[idx-1][1].score === data.score ? "T" : "";
-    const cls = getScoreClass(data.score);
-    const thruStr = data.thru ? data.thru : "";
+  top10.forEach((p, idx) => {
+    const pos = positions[idx];
+    // Add T prefix if there's a tie at this position
+    const isTied = top10.filter(x => x.score === p.score).length > 1;
+    const prefix = isTied ? "T" : "";
+    const cls = getScoreClass(p.score);
+    const thruStr = p.thru && p.thru !== "F" ? p.thru : (p.thru === "F" ? "" : "");
     html += `<div class="lb-row">
       <span class="pos">${prefix}${pos}</span>
-      <span class="player">${getFullName(name)}</span>
+      <span class="player">${p.name}</span>
       <span class="thru-info">${thruStr}</span>
-      <span class="sc ${cls}">${formatScore(data.score)}</span>
+      <span class="sc ${cls}">${formatScore(p.score)}</span>
     </div>`;
   });
 
@@ -672,15 +732,20 @@ function renderAnalysis(standings) {
 // ── Status badge ──
 function updateStatus() {
   const badge = document.getElementById("statusBadge");
-  if (tournamentStatus === "STATUS_IN_PROGRESS" || tournamentStatus === "in") {
+  const roundLabel = tournamentRound || "";
+
+  if (liveState === "LIVE") {
     badge.className = "badge badge-live";
-    badge.textContent = "● LIVE — " + tournamentRound;
-  } else if (tournamentStatus === "STATUS_FINAL" || tournamentStatus === "post") {
+    badge.textContent = "● LIVE" + (roundLabel ? " — " + roundLabel : "");
+  } else if (liveState === "ROUND_COMPLETE") {
     badge.className = "badge badge-complete";
-    badge.textContent = "✓ " + tournamentRound + " Complete";
+    badge.textContent = "✓ " + (roundLabel ? roundLabel + " Complete" : "Round Complete");
+  } else if (liveState === "PRE_ROUND") {
+    badge.className = "badge badge-complete";
+    badge.textContent = "⏰ " + (roundLabel ? roundLabel + " — Pre-tee" : "Pre-tournament");
   } else {
     badge.className = "badge badge-complete";
-    badge.textContent = tournamentRound || "Tournament";
+    badge.textContent = roundLabel || "Tournament";
   }
 
   document.getElementById("lastUpdated").textContent = new Date().toLocaleString("en-US", {
