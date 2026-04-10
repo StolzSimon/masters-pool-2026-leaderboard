@@ -65,7 +65,11 @@
   .lb-row .sc.under{color:var(--good)}
   .lb-row .sc.over{color:var(--red)}
   .lb-row .sc.even{color:var(--dark)}
-  .lb-row .thru-info{font-size:.72rem;color:var(--muted);width:50px;text-align:right}
+  .lb-row .thru-info{font-size:.78rem;color:var(--muted);width:58px;text-align:right;font-variant-numeric:tabular-nums}
+  .lb-row .thru-info .flag{font-size:.85rem;margin-right:2px;filter:saturate(1.1)}
+  .lb-row.lb-header{font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;padding-bottom:4px;border-bottom:1px solid rgba(0,0,0,.12)}
+  .lb-row.lb-header .player{font-weight:700}
+  .lb-row.lb-header .sc{color:var(--muted);font-weight:700}
   .lb-row.is-live{background:rgba(220,53,69,.04)}
   .lb-row .live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#dc3545;margin-right:5px;vertical-align:middle;animation:livePulse 1.6s ease-in-out infinite}
   .lb-row .status-pill{display:inline-block;font-size:.62rem;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle;letter-spacing:.3px;text-transform:uppercase}
@@ -184,7 +188,7 @@
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 21 &bull; Built with Claude</span>
+    <span class="version">App version 22 &bull; Built with Claude</span>
   </div>
 </div>
 
@@ -736,7 +740,12 @@ function renderLeaderboard() {
   }
 
   // Compute positions with ties (T1, T1, T3, etc.)
-  let html = "";
+  let html = `<div class="lb-row lb-header">
+    <span class="pos">#</span>
+    <span class="player">Player</span>
+    <span class="thru-info">Thru</span>
+    <span class="sc">Score</span>
+  </div>`;
   let positions = [];
   top10.forEach((p, idx) => {
     if (idx === 0) {
@@ -761,14 +770,14 @@ function renderLeaderboard() {
     const isFinished = state === "post" || p.thru === "F";
     const isPre = state === "pre";
 
-    // "Thru" column: show hole number if playing, "F" if finished, blank otherwise
+    // "Thru" column: ⛳ + hole number if playing, "F" if finished, blank otherwise
     let thruStr = "";
     if (isPlaying && p.thru && p.thru !== "F") {
-      thruStr = "thru " + p.thru;
+      thruStr = `<span class="flag">⛳</span>${p.thru}`;
     } else if (isFinished) {
       thruStr = "F";
     } else if (p.thru && p.thru !== "F") {
-      thruStr = p.thru;
+      thruStr = `<span class="flag">⛳</span>${p.thru}`;
     }
 
     // Name decoration: pulsing red dot if playing, small "F" pill if done, grey "—" if pre
