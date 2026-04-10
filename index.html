@@ -66,6 +66,12 @@
   .lb-row .sc.over{color:var(--red)}
   .lb-row .sc.even{color:var(--dark)}
   .lb-row .thru-info{font-size:.72rem;color:var(--muted);width:50px;text-align:right}
+  .lb-row.is-live{background:rgba(220,53,69,.04)}
+  .lb-row .live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#dc3545;margin-right:5px;vertical-align:middle;animation:livePulse 1.6s ease-in-out infinite}
+  .lb-row .status-pill{display:inline-block;font-size:.62rem;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle;letter-spacing:.3px;text-transform:uppercase}
+  .lb-row .status-pill.finished{background:rgba(40,120,60,.12);color:#286e3e}
+  .lb-row .status-pill.pre{background:rgba(0,0,0,.06);color:var(--muted)}
+  @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
   .loading{text-align:center;padding:40px;color:var(--muted);font-size:.95rem}
   .loading .spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -178,7 +184,7 @@
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 18 &bull; Built with Claude</span>
+    <span class="version">App version 20 &bull; Built with Claude</span>
   </div>
 </div>
 
@@ -285,6 +291,35 @@ let tournamentRound = "";
 let usingFallback = true; // Will flip to false on successful API fetch
 let liveState = "UNKNOWN"; // LIVE | ROUND_COMPLETE | TOURNAMENT_COMPLETE | ROUND_PENDING | PRE_TOURNAMENT | UNKNOWN
 let currentRoundNum = 1;
+
+// ── Calendar-based tournament schedule ──
+// The Masters 2026 runs April 9–12. This is fixed and known, so we use it as
+// the primary source of truth for which round we're in, rather than relying
+// on ESPN's sometimes-flaky status/thru fields. Dates are Eastern Time
+// (Augusta National) — we derive "what day is it at Augusta" from the user's
+// clock by converting to ET.
+const TOURNAMENT_SCHEDULE = {
+  "2026-04-09": 1, // Thursday  — Round 1
+  "2026-04-10": 2, // Friday    — Round 2
+  "2026-04-11": 3, // Saturday  — Round 3
+  "2026-04-12": 4, // Sunday    — Round 4
+};
+
+function getAugustaDateKey(d = new Date()) {
+  // Format today's date as YYYY-MM-DD in America/New_York (Augusta's tz)
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(d);
+  const y = parts.find(p => p.type === "year").value;
+  const m = parts.find(p => p.type === "month").value;
+  const day = parts.find(p => p.type === "day").value;
+  return `${y}-${m}-${day}`;
+}
+
+function getScheduledRound() {
+  return TOURNAMENT_SCHEDULE[getAugustaDateKey()] || null;
+}
 let rawStatusDetail = ""; // Raw ESPN status string for badge display
 
 // Full tournament leaderboard (independent of pool picks) — top 10 for the leaderboard widget
@@ -536,7 +571,10 @@ async function fetchScores() {
 
       // Add to full leaderboard regardless of whether it matches a pool pick
       if (name && score !== null) {
-        newLeaderboard.push({ name, score, thru });
+        // Per-player live state: "in" = on the course, "post" = finished,
+        // "pre" = not yet teed off. ESPN puts this at competitor.status.type.state.
+        const playerState = (c.status?.type?.state || "").toLowerCase();
+        newLeaderboard.push({ name, score, thru, playerState });
       }
 
       // Try to match for pool standings
@@ -558,61 +596,56 @@ async function fetchScores() {
     }
 
     // ── Determine live state ──
-    // PRIMARY source: ESPN's tournament status detail string. This is the authoritative
-    // truth ("Round 2 - In Progress", "Round 1 - Final", "Tournament Final", etc.)
-    // SECONDARY: player activity (used only for the "anyone currently swinging" pulse)
+    // PRIMARY source: the tournament calendar. We know the Masters runs
+    // April 9–12, so if today is one of those dates we know the round
+    // definitively — no parsing required. ESPN's detail string is used as a
+    // SECONDARY refinement: it can upgrade us to "Round Complete" or
+    // "Tournament Complete" when applicable, but it can't drag us back to
+    // a "pre-tee" state on a day we know play is happening.
     const statusDetail = (event.status?.type?.detail || "").toLowerCase();
     const statusName = (event.status?.type?.name || "").toLowerCase();
     const statusState = (event.status?.type?.state || "").toLowerCase();
 
-    // Extract round number from detail string ("Round 2 - In Progress" → 2)
-    const roundMatch = statusDetail.match(/round\s*(\d)/i);
-    if (roundMatch) {
-      currentRoundNum = parseInt(roundMatch[1], 10);
+    const scheduledRound = getScheduledRound();
+
+    // Determine current round number. Calendar wins; ESPN is the fallback.
+    if (scheduledRound !== null) {
+      currentRoundNum = scheduledRound;
     } else {
-      currentRoundNum = event.status?.period || 1;
+      const roundMatch = statusDetail.match(/round\s*(\d)/i);
+      if (roundMatch) {
+        currentRoundNum = parseInt(roundMatch[1], 10);
+      } else {
+        currentRoundNum = event.status?.period || 1;
+      }
     }
 
-    // Decide state from the detail string
-    if (statusDetail.includes("final") || statusName.includes("final") || statusState === "post") {
-      // Tournament is fully done OR a specific round is final
-      if (statusDetail.includes("tournament") || statusName === "status_final") {
-        liveState = "TOURNAMENT_COMPLETE";
-      } else {
+    // Decide live state.
+    const espnSaysFinal = statusDetail.includes("final") || statusName.includes("final") || statusState === "post";
+    const espnSaysTournamentComplete = espnSaysFinal && (statusDetail.includes("tournament") || statusName === "status_final");
+
+    if (espnSaysTournamentComplete) {
+      liveState = "TOURNAMENT_COMPLETE";
+    } else if (scheduledRound !== null) {
+      // We're on a tournament day. Default to LIVE. ESPN can only downgrade
+      // us to ROUND_COMPLETE if it explicitly says the current round is final.
+      if (espnSaysFinal) {
         liveState = "ROUND_COMPLETE";
+      } else {
+        liveState = "LIVE";
       }
     } else if (statusDetail.includes("in progress") || statusDetail.includes("inprogress") ||
                statusName === "status_in_progress" || statusState === "in") {
-      // Round is in progress per ESPN. Decide whether to show LIVE or the
-      // "pre-tee" fallback. We ONLY downgrade to ROUND_PENDING when we have
-      // positive evidence that everyone is pre-tee — i.e., we have usable
-      // thru data for most players and all of it says 0/not-started.
-      // If thru data is missing (unknownThruCount dominates), trust ESPN
-      // and show LIVE rather than confabulating a pre-tee state.
-      const playersWithThruData = activelyPlayingCount + finishedCurrentRoundCount + notStartedCurrentRoundCount;
-      const haveReliableThruData = playersWithThruData >= unknownThruCount && playersWithThruData > 0;
-
-      if (activelyPlayingCount > 0) {
-        liveState = "LIVE";
-      } else if (haveReliableThruData && notStartedCurrentRoundCount > finishedCurrentRoundCount) {
-        // Round is "in progress" but we have real evidence that everyone is
-        // still pre-tee — early Friday morning, etc.
-        liveState = "ROUND_PENDING";
-      } else {
-        // Either (a) ESPN says in progress, some have finished, none currently
-        // swinging — late-round wind-down; or (b) thru data is missing and we
-        // can't tell — trust ESPN and show LIVE.
-        liveState = "LIVE";
-      }
+      // Off-calendar but ESPN says in progress — trust it.
+      liveState = "LIVE";
     } else if (statusDetail.includes("scheduled") || statusState === "pre") {
       liveState = "PRE_TOURNAMENT";
     } else {
-      // Unknown/fallback — trust the detail string verbatim
       liveState = "UNKNOWN";
     }
 
     rawStatusDetail = event.status?.type?.detail || "";
-    console.log(`🏌️ Live state: ${liveState} | round: ${currentRoundNum} | ESPN status: "${rawStatusDetail}" (name: "${statusName}", state: "${statusState}")`);
+    console.log(`🏌️ Live state: ${liveState} | round: ${currentRoundNum} (scheduled: ${scheduledRound}) | ESPN status: "${rawStatusDetail}" (name: "${statusName}", state: "${statusState}")`);
     console.log(`   players → playing: ${activelyPlayingCount}, finished: ${finishedCurrentRoundCount}, not started: ${notStartedCurrentRoundCount}, unknown: ${unknownThruCount}`);
 
     // Sort full leaderboard by score ascending
@@ -687,10 +720,39 @@ function renderLeaderboard() {
     const isTied = top10.filter(x => x.score === p.score).length > 1;
     const prefix = isTied ? "T" : "";
     const cls = getScoreClass(p.score);
-    const thruStr = p.thru && p.thru !== "F" ? p.thru : (p.thru === "F" ? "" : "");
-    html += `<div class="lb-row">
+
+    // Per-player live state → visual indicator
+    const state = p.playerState || "";
+    const isPlaying = state === "in";
+    const isFinished = state === "post" || p.thru === "F";
+    const isPre = state === "pre";
+
+    // "Thru" column: show hole number if playing, "F" if finished, blank otherwise
+    let thruStr = "";
+    if (isPlaying && p.thru && p.thru !== "F") {
+      thruStr = "thru " + p.thru;
+    } else if (isFinished) {
+      thruStr = "F";
+    } else if (p.thru && p.thru !== "F") {
+      thruStr = p.thru;
+    }
+
+    // Name decoration: pulsing red dot if playing, small "F" pill if done, grey "—" if pre
+    let nameDecoration = "";
+    if (isPlaying) {
+      nameDecoration = '<span class="live-dot" title="On the course"></span>';
+    }
+    let tailPill = "";
+    if (isFinished && !isPlaying) {
+      tailPill = '<span class="status-pill finished">F</span>';
+    } else if (isPre) {
+      tailPill = '<span class="status-pill pre">Pre</span>';
+    }
+
+    const rowCls = "lb-row" + (isPlaying ? " is-live" : "");
+    html += `<div class="${rowCls}">
       <span class="pos">${prefix}${pos}</span>
-      <span class="player">${p.name}</span>
+      <span class="player">${nameDecoration}${p.name}${tailPill}</span>
       <span class="thru-info">${thruStr}</span>
       <span class="sc ${cls}">${formatScore(p.score)}</span>
     </div>`;
