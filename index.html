@@ -178,15 +178,15 @@
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 16 &bull; Built with Claude</span>
+    <span class="version">App version 17 &bull; Built with Claude</span>
   </div>
 </div>
 
-<a href="mailto:stolz.au+mastersapp@gmail.com?subject=Masters%20Pool%20App%20Feedback&body=Hi%2C%0A%0AI%20noticed%20something%20with%20the%20Masters%20Pool%20app%3A%0A%0A" class="feedback-btn" title="Report an issue or send feedback">
+<a href="/cdn-cgi/l/email-protection#8efdfae1e2f4a0effba5e3effdfaebfcfdeffefecee9e3efe7e2a0ede1e3b1fdfbece4ebedfab3c3effdfaebfcfdabbcbedee1e1e2abbcbecffefeabbcbec8ebebeaecefede5a8ece1eaf7b3c6e7abbccdabbecfabbecfc7abbcbee0e1fae7edebeaabbcbefde1e3ebfae6e7e0e9abbcbef9e7fae6abbcbefae6ebabbcbec3effdfaebfcfdabbcbedee1e1e2abbcbeeffefeabbdcfabbecfabbecf" class="feedback-btn" title="Report an issue or send feedback">
   💬 Feedback
 </a>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ── Pool entries ──
 const ENTRIES = [
   {name:"Ainge, Terry",picks:["Aberg","Rahm","Schauffele","Scheffler"],alt:"Fleetwood"},
@@ -283,8 +283,9 @@ let playerScores = { ...FALLBACK_SCORES }; // Start with fallback so page render
 let tournamentStatus = "unknown";
 let tournamentRound = "";
 let usingFallback = true; // Will flip to false on successful API fetch
-let liveState = "BETWEEN_ROUNDS"; // LIVE | BETWEEN_ROUNDS | PRE_TOURNAMENT | UNKNOWN
+let liveState = "UNKNOWN"; // LIVE | ROUND_COMPLETE | TOURNAMENT_COMPLETE | ROUND_PENDING | PRE_TOURNAMENT | UNKNOWN
 let currentRoundNum = 1;
+let rawStatusDetail = ""; // Raw ESPN status string for badge display
 
 // Full tournament leaderboard (independent of pool picks) — top 10 for the leaderboard widget
 const FALLBACK_LEADERBOARD = [
@@ -488,34 +489,22 @@ async function fetchScores() {
     const newLeaderboard = [];
     let matchedCount = 0;
     let activelyPlayingCount = 0;
-    let finishedRoundCount = 0;
-    let notStartedCount = 0;
-    let maxRoundsCompleted = 0;
+    let finishedCurrentRoundCount = 0;
+    let notStartedCurrentRoundCount = 0;
 
     for (const c of competitors) {
       const name = c.athlete?.displayName || c.athlete?.fullName || c.athlete?.shortName || "";
       const score = parseGolferScore(c);
       const thru = parseThruField(c);
 
-      // Count completed rounds from linescores (each entry = one round played)
-      if (Array.isArray(c.linescores)) {
-        const validRounds = c.linescores.filter(ls => {
-          const v = ls?.value;
-          const dv = ls?.displayValue;
-          return (v !== undefined && v !== null && v !== 0) ||
-                 (dv && dv !== "" && dv !== "-" && dv !== "--");
-        }).length;
-        if (validRounds > maxRoundsCompleted) maxRoundsCompleted = validRounds;
-      }
-
-      // Track live state from thru values
+      // Track per-player current-round state from thru
       const thruNum = parseInt(thru, 10);
       if (thru === "F" || thruNum === 18) {
-        finishedRoundCount++;
+        finishedCurrentRoundCount++;
       } else if (!isNaN(thruNum) && thruNum >= 1 && thruNum <= 17) {
         activelyPlayingCount++;
       } else {
-        notStartedCount++;
+        notStartedCurrentRoundCount++;
       }
 
       // Add to full leaderboard regardless of whether it matches a pool pick
@@ -541,24 +530,53 @@ async function fetchScores() {
       throw new Error(`Matched 0 players (processed ${competitors.length}). Check console for API structure.`);
     }
 
-    // Determine actual live state
-    // Priority: someone playing → LIVE; rounds done but nobody playing → BETWEEN_ROUNDS; nothing yet → PRE_TOURNAMENT
-    if (activelyPlayingCount > 0) {
-      liveState = "LIVE";
-      // The round currently being played is one more than max completed
-      currentRoundNum = maxRoundsCompleted + 1;
-    } else if (maxRoundsCompleted > 0) {
-      liveState = "BETWEEN_ROUNDS";
-      currentRoundNum = maxRoundsCompleted; // The just-completed round
-    } else if (finishedRoundCount > competitors.length / 2) {
-      // Edge case: finished but no linescores yet (shouldn't happen, but safe fallback)
-      liveState = "BETWEEN_ROUNDS";
-      currentRoundNum = 1;
+    // ── Determine live state ──
+    // PRIMARY source: ESPN's tournament status detail string. This is the authoritative
+    // truth ("Round 2 - In Progress", "Round 1 - Final", "Tournament Final", etc.)
+    // SECONDARY: player activity (used only for the "anyone currently swinging" pulse)
+    const statusDetail = (event.status?.type?.detail || "").toLowerCase();
+    const statusName = (event.status?.type?.name || "").toLowerCase();
+    const statusState = (event.status?.type?.state || "").toLowerCase();
+
+    // Extract round number from detail string ("Round 2 - In Progress" → 2)
+    const roundMatch = statusDetail.match(/round\s*(\d)/i);
+    if (roundMatch) {
+      currentRoundNum = parseInt(roundMatch[1], 10);
     } else {
-      liveState = "PRE_TOURNAMENT";
-      currentRoundNum = 0;
+      currentRoundNum = event.status?.period || 1;
     }
-    console.log(`Live state: ${liveState} | round: ${currentRoundNum} | playing: ${activelyPlayingCount}, finished: ${finishedRoundCount}, not started: ${notStartedCount}, max rounds done: ${maxRoundsCompleted}`);
+
+    // Decide state from the detail string
+    if (statusDetail.includes("final") || statusName.includes("final") || statusState === "post") {
+      // Tournament is fully done OR a specific round is final
+      if (statusDetail.includes("tournament") || statusName === "status_final") {
+        liveState = "TOURNAMENT_COMPLETE";
+      } else {
+        liveState = "ROUND_COMPLETE";
+      }
+    } else if (statusDetail.includes("in progress") || statusDetail.includes("inprogress") ||
+               statusName === "status_in_progress" || statusState === "in") {
+      // Round is in progress per ESPN. Check if anyone is actually swinging right now.
+      if (activelyPlayingCount > 0) {
+        liveState = "LIVE";
+      } else if (notStartedCurrentRoundCount > finishedCurrentRoundCount) {
+        // Round is "in progress" but everyone is still pre-tee — early Friday morning, etc.
+        liveState = "ROUND_PENDING";
+      } else {
+        // ESPN says in progress but nobody's playing and most have finished —
+        // probably late evening when round is winding down. Trust ESPN here.
+        liveState = "LIVE";
+      }
+    } else if (statusDetail.includes("scheduled") || statusState === "pre") {
+      liveState = "PRE_TOURNAMENT";
+    } else {
+      // Unknown/fallback — trust the detail string verbatim
+      liveState = "UNKNOWN";
+    }
+
+    rawStatusDetail = event.status?.type?.detail || "";
+    console.log(`🏌️ Live state: ${liveState} | round: ${currentRoundNum} | ESPN status: "${rawStatusDetail}" (name: "${statusName}", state: "${statusState}")`);
+    console.log(`   players → playing: ${activelyPlayingCount}, finished: ${finishedCurrentRoundCount}, not started: ${notStartedCurrentRoundCount}`);
 
     // Sort full leaderboard by score ascending
     newLeaderboard.sort((a, b) => a.score - b.score);
@@ -785,15 +803,22 @@ function updateStatus() {
   if (liveState === "LIVE") {
     badge.className = "badge badge-live";
     badge.textContent = "● LIVE — Round " + currentRoundNum;
-  } else if (liveState === "BETWEEN_ROUNDS") {
+  } else if (liveState === "ROUND_COMPLETE") {
     badge.className = "badge badge-complete";
     badge.textContent = "✓ Round " + currentRoundNum + " Complete";
+  } else if (liveState === "TOURNAMENT_COMPLETE") {
+    badge.className = "badge badge-complete";
+    badge.textContent = "🏆 Tournament Complete";
+  } else if (liveState === "ROUND_PENDING") {
+    badge.className = "badge badge-complete";
+    badge.textContent = "⏰ Round " + currentRoundNum + " — Pre-tee";
   } else if (liveState === "PRE_TOURNAMENT") {
     badge.className = "badge badge-complete";
     badge.textContent = "⏰ Pre-tournament";
   } else {
+    // UNKNOWN — fall back to ESPN's raw detail string if we have it
     badge.className = "badge badge-complete";
-    badge.textContent = tournamentRound || "Tournament";
+    badge.textContent = rawStatusDetail || "Tournament";
   }
 
   document.getElementById("lastUpdated").textContent = new Date().toLocaleString("en-US", {
@@ -815,18 +840,4 @@ const favorites = loadFavorites();
 
 // ── Main loop ──
 async function refresh() {
-  const ok = await fetchScores();
-  if (ok) document.getElementById("errorMsg").style.display = "none";
-  renderLeaderboard();
-  renderStandings();
-  updateStatus();
-}
-
-// Initial load
-refresh();
-
-// Auto-refresh every 5 minutes
-setInterval(refresh, 5 * 60 * 1000);
-</script>
-</body>
-</html>
+  const
