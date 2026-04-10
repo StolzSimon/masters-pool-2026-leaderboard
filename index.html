@@ -48,6 +48,8 @@
   .total.over{color:var(--red)}
   .total.even{color:var(--dark)}
   .alternate{font-size:.78rem;color:var(--muted);text-align:center}
+  .alternate .player-name{display:block;font-size:.78rem;color:var(--muted);line-height:1.1}
+  .alternate .score{display:block;font-weight:700;margin-top:1px}
   .legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin:16px 0 8px;font-size:.78rem;color:var(--muted)}
   .legend-item{display:flex;align-items:center;gap:5px}
   .legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
@@ -653,20 +655,31 @@ function renderStandings() {
       total += data.score;
       return { name: p, score: data.score, thru: data.thru || "" };
     });
-    return { ...entry, pickScores, total, allKnown };
+    // Get alternate's score for tiebreaking (null if not in our data)
+    const altData = playerScores[entry.alt];
+    const altScore = altData ? altData.score : null;
+    return { ...entry, pickScores, total, altScore, allKnown };
   });
 
-  // Sort by total (ascending)
-  standings.sort((a, b) => a.total - b.total);
+  // Sort: primary by total, secondary by alt score (null sorts last)
+  standings.sort((a, b) => {
+    if (a.total !== b.total) return a.total - b.total;
+    // Tiebreaker: lower alt score wins; null alts sort to the end
+    if (a.altScore === null && b.altScore === null) return 0;
+    if (a.altScore === null) return 1;
+    if (b.altScore === null) return -1;
+    return a.altScore - b.altScore;
+  });
 
-  // Assign ranks
-  let rank = 1;
+  // Assign ranks — only mark as tied if BOTH total AND alt score match
   standings.forEach((entry, idx) => {
-    if (idx > 0 && entry.total === standings[idx - 1].total) {
-      entry.rank = standings[idx - 1].rank;
+    const prev = idx > 0 ? standings[idx - 1] : null;
+    const isTrueTie = prev && prev.total === entry.total && prev.altScore === entry.altScore;
+    if (isTrueTie) {
+      entry.rank = prev.rank;
       entry.rankDisplay = "T" + entry.rank;
-      if (!standings[idx - 1].rankDisplay.startsWith("T")) {
-        standings[idx - 1].rankDisplay = "T" + standings[idx - 1].rank;
+      if (!prev.rankDisplay.startsWith("T")) {
+        prev.rankDisplay = "T" + prev.rank;
       }
     } else {
       entry.rank = idx + 1;
@@ -697,7 +710,10 @@ function renderStandings() {
       html += `<td class="pick"><span class="player-name">${ps.name}</span><span class="score ${cls}">${scoreStr}</span>${thruStr}</td>`;
     });
 
-    html += `<td class="alternate">${entry.alt}</td>`;
+    // Alternate with score (used as tiebreaker)
+    const altCls = entry.altScore === null ? "unknown" : getScoreClass(entry.altScore);
+    const altScoreStr = entry.altScore === null ? "?" : formatScore(entry.altScore);
+    html += `<td class="alternate"><span class="player-name">${entry.alt}</span><span class="score ${altCls}" style="font-size:.75rem">${altScoreStr}</span></td>`;
     html += `</tr>`;
   });
 
