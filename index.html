@@ -53,6 +53,8 @@
   .legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin:16px 0 8px;font-size:.78rem;color:var(--muted)}
   .legend-item{display:flex;align-items:center;gap:5px}
   .legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .payout-note{background:#fffbe6;border-left:4px solid var(--gold);padding:12px 14px;margin:14px 0 18px;font-size:.82rem;border-radius:3px;color:var(--dark);line-height:1.5}
+  .payout-note strong{color:var(--green-dark)}
   .leaderboard-mini{background:var(--cream);border:1px solid var(--border);border-radius:5px;padding:12px 14px;margin:14px 0}
   .leaderboard-mini h4{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--green);margin-bottom:8px}
   .lb-row{display:flex;justify-content:space-between;font-size:.82rem;padding:3px 0;border-bottom:1px solid rgba(0,0,0,.05)}
@@ -96,16 +98,16 @@
     <span class="tag" id="refreshTag">Auto-refreshes every 5 min</span>
   </div>
 
-  <div class="instructions">
-    <span style="font-size:1.3rem">⭐</span>
-    <span><strong>Tap any row to mark it as your favorite</strong> — useful for tracking your own entry. Tap again to unmark.</span>
-  </div>
-
   <div id="errorMsg" class="error-msg" style="display:none"></div>
 
   <div id="miniLeaderboard" class="leaderboard-mini">
     <h4>🏆 Masters Tournament Leaderboard — Top 10</h4>
     <div id="topPlayers"><div class="loading"><div class="spinner"></div><br>Loading leaderboard...</div></div>
+  </div>
+
+  <div class="instructions">
+    <span style="font-size:1.3rem">⭐</span>
+    <span><strong>Tap any row to mark it as your favorite</strong> — useful for tracking your own entry. Tap again to unmark.</span>
   </div>
 
   <div class="table-wrap">
@@ -134,6 +136,10 @@
     <div class="legend-item"><span class="legend-dot" style="background:#fff8d6;border:1px solid #c8a951"></span> Your favorites (tap to mark)</div>
   </div>
 
+  <div class="payout-note">
+    <strong>Remember:</strong> This pool pays by total prize money earned, not strokes. These standings use cumulative to-par as a proxy — final payout will be based on actual earnings. And last year's champion was 7 shots back after Round 1. Plenty of golf to play.
+  </div>
+
   <div id="analysisSection" class="commentary" style="display:none">
     <h3>📊 Pool Snapshot</h3>
     <div id="analysisContent"></div>
@@ -145,7 +151,7 @@
 
     <h4 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--green-dark);margin-top:14px;margin-bottom:6px">🟢 Heroes of the Day</h4>
     <p><strong>Rory McIlroy (-5, 67)</strong> — The defending champion couldn't have asked for a better opening to his title defense. It's his first sub-70 Thursday at Augusta since 2018, and a massive improvement on last year when he was 7 shots back after Day 1. Notably, this is also the first time since 2011 he's led overnight at Augusta — a tournament he'd rather forget. He's the engine of every entry that picked him.</p>
-    <p><strong>Patrick Reed (-3, 69)</strong> — The biggest value pick of the pool delivered. Reed opened birdie-eagle to become just the sixth player in Masters history to start a tournament that way, then added another eagle on the par-5 8th to turn in 31. Two bogeys on the back kept him from a truly historic round, but he sits T3 — and only 2 entries had him.</p>
+    <p><strong>Patrick Reed (-3, 69)</strong> — The biggest value pick of the pool delivered. Reed opened birdie-eagle to become just the sixth player in Masters history to start a tournament that way, then added another eagle on the par-5 8th to turn in 31. Two bogeys on the back kept him from a truly historic round, but he sits T3 — and only 2 entries had him as a primary pick (Mike Scarr and Simon Stolz). Four others held him as their alternate.</p>
     <p><strong>Justin Rose (-2, 70)</strong> — Reached -4 twice during his round before a bogey-bogey finish dropped him to -2. Still good for a top-10 finish — his 9th in 21 Masters starts (only Jack Nicklaus has more).</p>
     <p><strong>Scottie Scheffler (-2, 70)</strong> — Eagled the par-5 second and birdied the third to quickly reach -3, then went 14 pars and a bogey the rest of the way. Hit 12 of 14 fairways — his best driving accuracy in 25 rounds. The ball-striking is back.</p>
     <p><strong>Tommy Fleetwood (-1, 71)</strong> — Quietly steady. Was at -3 through 11 before bogeying his final hole to finish with five birdies against four bogeys.</p>
@@ -158,7 +164,7 @@
 
     <h4 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--green-dark);margin-top:14px;margin-bottom:6px">🎯 The Pool Story</h4>
     <p><strong>Cody Pantages took the early lead at -11</strong>, riding the perfect storm of McIlroy, Rose, Schauffele, and Scheffler. None of his picks blew up. He's the only entry with all four picks under par after Round 1.</p>
-    <p><strong>Mike Scarr sits 2nd at -9</strong> as the only entry to have picked Patrick Reed. The Reed call alone is what separates him from the rest of the Scarr clan, who all stacked the chalk favorites.</p>
+    <p><strong>Mike Scarr sits 2nd at -9</strong> on the strength of being one of only two entries to pick Patrick Reed as a primary (the other being Simon Stolz). Combined with Rose, Schauffele, and Scheffler, the Reed call gives Mike a unique edge over the rest of the Scarr clan, who mostly stacked the chalk favorites.</p>
     <p><strong>The Scarr family — Matt and Ryan — tied for 3rd at -6</strong> with the same four picks (Aberg, McIlroy, Schauffele, Scheffler) — would have been better with anyone other than Aberg in their lineup, but McIlroy is doing the heavy lifting.</p>
     <p><strong>The bottom of the standings is dominated by entries that doubled up on the LIV pair.</strong> Anyone who picked both Rahm and DeChambeau is +10 from those two picks alone, which is nearly impossible to recover from. Five entries are in this trap.</p>
     <p style="margin-top:10px;font-size:.82rem;color:var(--muted);font-style:italic">Remember: last year's champion (McIlroy) was 7 shots back after Round 1 and still won. With 54 holes remaining, any entry within 10 shots of the lead has a real shot.</p>
@@ -759,8 +765,6 @@ function renderAnalysis(standings) {
   html += `<div class="stat-card"><div class="label">Entries In The Red</div><div class="value">${standings.filter(s => s.total < 0).length} of 33</div><div class="detail">Combined score under par</div></div>`;
   html += `<div class="stat-card"><div class="label">Tightest Gap</div><div class="value">${formatScore(standings[0].total)} to ${formatScore(standings[standings.length-1].total)}</div><div class="detail">1st place to last</div></div>`;
   html += `</div>`;
-
-  html += `<p style="margin-top:14px;font-size:.82rem;color:var(--muted)"><strong>Remember:</strong> This pool pays by total prize money earned, not strokes. These standings use cumulative to-par as a proxy — final payout will be based on actual earnings. And last year's champion was 7 shots back after Round 1. Plenty of golf to play.</p>`;
 
   content.innerHTML = html;
 }
