@@ -840,4 +840,20 @@ const favorites = loadFavorites();
 
 // ── Main loop ──
 async function refresh() {
-  const
+  const success = await fetchScores();
+  renderLeaderboard();
+  renderStandings();
+  updateStatus();
+  
+  if (!success) {
+    console.warn("Using fallback data — ESPN fetch failed");
+  }
+}
+
+// ── Init ──
+refresh();
+setInterval(refresh, 5 * 60 * 1000); // Refresh every 5 minutes
+
+</script>
+</body>
+</html>
