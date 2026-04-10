@@ -76,6 +76,28 @@
   .lb-row.lb-header .player{font-weight:700}
   .lb-row.lb-header .sc{color:var(--muted);font-weight:700}
   .lb-row.is-live{background:rgba(220,53,69,.04)}
+  .lb-row.selectable{cursor:pointer;transition:background .15s ease,transform .1s ease}
+  .lb-row.selectable:hover{background:rgba(0,100,60,.06)}
+  .lb-row.selectable:active{transform:scale(.995)}
+  .lb-row.selected{background:rgba(200,169,81,.22)!important;box-shadow:inset 3px 0 0 var(--gold,#c8a951);padding-left:6px;margin-left:-6px;border-radius:2px}
+  .lb-row.selected .player{font-weight:700}
+
+  /* Selection banner above standings table */
+  .selection-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff8d6;border:1px solid #c8a951;border-radius:6px;padding:8px 12px;margin:10px 0;font-size:.85rem}
+  .selection-banner .sel-label{flex:1}
+  .selection-banner strong{color:#7a5c00}
+  .selection-banner .sel-clear{background:transparent;border:1px solid #c8a951;color:#7a5c00;border-radius:4px;padding:3px 10px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap}
+  .selection-banner .sel-clear:hover{background:#c8a951;color:#fff}
+  .selection-banner.empty{background:#f3f4f6;border-color:#c7ccd1}
+  .selection-banner.empty strong{color:#3f4651}
+  .selection-banner.empty .sel-clear{border-color:#9aa1aa;color:#3f4651}
+  .selection-banner.empty .sel-clear:hover{background:#9aa1aa;color:#fff}
+
+  /* Standings table row states while a top-10 player is selected */
+  tbody tr.sel-dim{opacity:.32;filter:grayscale(.4)}
+  tbody tr.sel-match{background:#fff8d6!important;box-shadow:inset 3px 0 0 var(--gold,#c8a951)}
+  tbody tr.sel-match.favorited{background:#ffeaa0!important}
+  tbody td.pick-match{background:rgba(200,169,81,.35)!important;box-shadow:inset 0 0 0 2px #c8a951;border-radius:3px}
   .lb-row .live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#dc3545;margin-right:5px;vertical-align:middle;animation:livePulse 1.6s ease-in-out infinite}
   .lb-row .status-pill{display:inline-block;font-size:.62rem;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:5px;vertical-align:middle;letter-spacing:.3px;text-transform:uppercase}
   .lb-row .status-pill.finished{background:rgba(40,120,60,.12);color:#286e3e}
@@ -126,8 +148,10 @@
 
   <div class="instructions">
     <span style="font-size:1.3rem">⭐</span>
-    <span><strong>Tap any row to mark it as your favorite</strong> — useful for tracking your own entry. Tap again to unmark.</span>
+    <span><strong>Tap any row to mark it as your favorite</strong> — useful for tracking your own entry. Tap again to unmark. <em>Or tap a player in the Top 10 above to see who picked them.</em></span>
   </div>
+
+  <div id="selectionBanner" class="selection-banner" style="display:none"></div>
 
   <div class="table-wrap">
     <table>
@@ -193,7 +217,7 @@
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 23 &bull; Built with Claude</span>
+    <span class="version">App version 25 &bull; Built with Claude</span>
   </div>
 </div>
 
@@ -300,6 +324,7 @@ let tournamentRound = "";
 let usingFallback = true; // Will flip to false on successful API fetch
 let liveState = "UNKNOWN"; // LIVE | ROUND_COMPLETE | TOURNAMENT_COMPLETE | ROUND_PENDING | PRE_TOURNAMENT | UNKNOWN
 let currentRoundNum = 1;
+let selectedPlayerShortName = null; // short name of the top-10 player currently highlighted in standings, or null
 
 // ── Calendar-based tournament schedule ──
 // The Masters 2026 runs April 9–12. This is fixed and known, so we use it as
@@ -798,8 +823,19 @@ function renderLeaderboard() {
       tailPill = '<span class="status-pill pre">Pre</span>';
     }
 
-    const rowCls = "lb-row" + (isPlaying ? " is-live" : "");
-    html += `<div class="${rowCls}">
+    // Match this ESPN player to a pool short name (e.g. "Justin Rose" → "Rose").
+    // Every row is selectable — unpicked players just show a "nobody picked
+    // this player" note in the selection banner instead of highlighting rows.
+    const shortName = matchPlayer(p.name);
+    const selectionKey = shortName || p.name; // full name falls back as the key
+    const isSelected = selectionKey === selectedPlayerShortName;
+
+    const rowCls = "lb-row"
+      + (isPlaying ? " is-live" : "")
+      + " selectable"
+      + (isSelected ? " selected" : "");
+    const dataAttrs = ` data-short="${selectionKey.replace(/"/g, "&quot;")}" data-full="${p.name.replace(/"/g, "&quot;")}"`;
+    html += `<div class="${rowCls}"${dataAttrs}>
       <span class="pos">${prefix}${pos}</span>
       <span class="player">${nameDecoration}${p.name}${tailPill}</span>
       <span class="thru-info">${thruStr}</span>
@@ -808,6 +844,14 @@ function renderLeaderboard() {
   });
 
   container.innerHTML = html;
+
+  // Wire up click-to-select
+  container.querySelectorAll(".lb-row.selectable").forEach(row => {
+    row.addEventListener("click", () => {
+      const key = row.dataset.short;
+      selectPlayer(selectedPlayerShortName === key ? null : key);
+    });
+  });
 }
 
 function getFullName(shortName) {
@@ -843,6 +887,105 @@ function renderStatusChip(state, thru) {
     return `<span class="status-chip chip-pre">PRE</span>`;
   }
   return "";
+}
+
+// ── Top-10 → standings selection/highlight ──
+// Tapping a player in the Top 10 filters the standings below: rows that
+// include the selected player (as a primary pick or alternate) are
+// highlighted, others are dimmed. Tap again to clear.
+function selectPlayer(shortName) {
+  selectedPlayerShortName = shortName;
+
+  // Update selected state on top-10 rows
+  document.querySelectorAll("#topPlayers .lb-row").forEach(row => {
+    if (shortName && row.dataset.short === shortName) {
+      row.classList.add("selected");
+    } else {
+      row.classList.remove("selected");
+    }
+  });
+
+  applyPlayerSelection();
+  updateSelectionBanner();
+}
+
+function applyPlayerSelection() {
+  const tbody = document.getElementById("standings");
+  if (!tbody) return;
+  const sn = selectedPlayerShortName;
+
+  // Clear previous state
+  tbody.querySelectorAll("tr").forEach(r => {
+    r.classList.remove("sel-match", "sel-dim");
+  });
+  tbody.querySelectorAll("td.pick-match").forEach(c => c.classList.remove("pick-match"));
+
+  if (!sn) return;
+
+  // First pass: figure out if anyone picked this player
+  const rows = Array.from(tbody.querySelectorAll("tr"));
+  const matchingRows = rows.filter(row => {
+    const picks = (row.dataset.picks || "").split(",");
+    const alt = row.dataset.alt || "";
+    return picks.includes(sn) || alt === sn;
+  });
+
+  // If nobody picked this player, don't dim anything — the banner explains why
+  if (matchingRows.length === 0) return;
+
+  // Otherwise highlight matches, dim the rest
+  rows.forEach(row => {
+    if (matchingRows.includes(row)) {
+      row.classList.add("sel-match");
+      row.querySelectorAll(`td[data-pick="${CSS.escape(sn)}"]`).forEach(c => c.classList.add("pick-match"));
+    } else {
+      row.classList.add("sel-dim");
+    }
+  });
+}
+
+function updateSelectionBanner() {
+  const banner = document.getElementById("selectionBanner");
+  if (!banner) return;
+  const sn = selectedPlayerShortName;
+  if (!sn) {
+    banner.style.display = "none";
+    banner.innerHTML = "";
+    banner.classList.remove("empty");
+    return;
+  }
+
+  // Count matches directly from row data (not DOM classes, which may not be
+  // applied yet in the zero-match case)
+  const tbody = document.getElementById("standings");
+  let matchCount = 0;
+  if (tbody) {
+    tbody.querySelectorAll("tr").forEach(row => {
+      const picks = (row.dataset.picks || "").split(",");
+      const alt = row.dataset.alt || "";
+      if (picks.includes(sn) || alt === sn) matchCount++;
+    });
+  }
+
+  // Prefer the full display name if the top-10 row stored one
+  const topRow = document.querySelector(`#topPlayers .lb-row[data-short="${CSS.escape(sn)}"]`);
+  const displayName = topRow?.dataset?.full || getFullName(sn);
+
+  banner.style.display = "flex";
+  if (matchCount === 0) {
+    banner.classList.add("empty");
+    banner.innerHTML = `
+      <span class="sel-label">🤷 Nobody in the pool picked <strong>${displayName}</strong></span>
+      <button class="sel-clear" type="button">Clear ✕</button>
+    `;
+  } else {
+    banner.classList.remove("empty");
+    banner.innerHTML = `
+      <span class="sel-label">Showing ${matchCount} ${matchCount === 1 ? "entry" : "entries"} with <strong>${displayName}</strong></span>
+      <button class="sel-clear" type="button">Clear ✕</button>
+    `;
+  }
+  banner.querySelector(".sel-clear").addEventListener("click", () => selectPlayer(null));
 }
 
 function renderStandings() {
@@ -898,8 +1041,10 @@ function renderStandings() {
     const entryId = entry.name.toLowerCase().replace(/[^a-z]/g, "-");
     const isFav = favorites.has(entryId);
     const rankClass = entry.rank === 1 ? "rank-1" : entry.rank <= 3 ? "rank-3" : "";
+    const picksAttr = entry.picks.join(",");
+    const altAttr = entry.alt || "";
 
-    html += `<tr data-entry="${entryId}" class="${isFav ? 'favorited' : ''}">`;
+    html += `<tr data-entry="${entryId}" data-picks="${picksAttr}" data-alt="${altAttr}" class="${isFav ? 'favorited' : ''}">`;
     html += `<td class="rank ${rankClass}">${entry.rankDisplay}</td>`;
     html += `<td class="name">${entry.name}</td>`;
 
@@ -910,14 +1055,14 @@ function renderStandings() {
       const cls = ps.score === null ? "unknown" : getScoreClass(ps.score);
       const scoreStr = ps.score === null ? "?" : formatScore(ps.score);
       const chip = renderStatusChip(ps.playerState, ps.thru);
-      html += `<td class="pick"><span class="player-name">${ps.name}</span><span class="score ${cls}">${scoreStr}</span>${chip}</td>`;
+      html += `<td class="pick" data-pick="${ps.name}"><span class="player-name">${ps.name}</span><span class="score ${cls}">${scoreStr}</span>${chip}</td>`;
     });
 
     // Alternate with score (used as tiebreaker)
     const altCls = entry.altScore === null ? "unknown" : getScoreClass(entry.altScore);
     const altScoreStr = entry.altScore === null ? "?" : formatScore(entry.altScore);
     const altChip = renderStatusChip(entry.altState, entry.altThru);
-    html += `<td class="alternate"><span class="player-name">${entry.alt}</span><span class="score ${altCls}" style="font-size:.75rem">${altScoreStr}</span>${altChip}</td>`;
+    html += `<td class="alternate" data-pick="${entry.alt}"><span class="player-name">${entry.alt}</span><span class="score ${altCls}" style="font-size:.75rem">${altScoreStr}</span>${altChip}</td>`;
     html += `</tr>`;
   });
 
@@ -932,6 +1077,9 @@ function renderStandings() {
       saveFavorites(favorites);
     });
   });
+
+  // Re-apply any active top-10 selection highlight after the table re-renders
+  applyPlayerSelection();
 
   // Update analysis
   renderAnalysis(standings);
