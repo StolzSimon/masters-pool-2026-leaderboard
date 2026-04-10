@@ -211,14 +211,22 @@ let tournamentStatus = "unknown";
 let tournamentRound = "";
 
 // ── ESPN API ──
-const ESPN_URL = "https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard";
+// Try the leaderboard endpoint first (more detailed), fallback to scoreboard
+const ESPN_URLS = [
+  "https://site.api.espn.com/apis/site/v2/sports/golf/pga/leaderboard",
+  "https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard"
+];
+
+let debugDumped = false; // Log raw response once for debugging
 
 function matchPlayer(espnName) {
+  if (!espnName) return null;
   const lower = espnName.toLowerCase();
   for (const [shortName, keywords] of Object.entries(NAME_MAP)) {
+    // Check all keywords match
     const allMatch = keywords.every(k => lower.includes(k.toLowerCase()));
     if (allMatch) return shortName;
-    // Also try last-name-only match for unique last names
+    // Fall back to last-name-only match for unique last names
     const lastName = keywords[keywords.length - 1].toLowerCase();
     if (lower.includes(lastName) && !["lee","kim","young","rose"].includes(lastName)) {
       return shortName;
@@ -227,65 +235,176 @@ function matchPlayer(espnName) {
   return null;
 }
 
-async function fetchScores() {
-  try {
-    const resp = await fetch(ESPN_URL);
-    if (!resp.ok) throw new Error(`ESPN API returned ${resp.status}`);
-    const data = await resp.json();
-
-    // Find the Masters event
-    const mastersEvent = data.events?.find(e =>
-      e.name?.toLowerCase().includes("masters") ||
-      e.shortName?.toLowerCase().includes("masters")
-    );
-
-    if (!mastersEvent) {
-      // If no Masters found, try the first/current event
-      if (!data.events?.length) throw new Error("No golf events found");
+// Robust score parser — handles all known ESPN golf response formats
+function parseGolferScore(c) {
+  // Helper: parse a string that should represent to-par
+  const tryParse = (v) => {
+    if (v === null || v === undefined) return null;
+    if (typeof v === "number") {
+      // If it's a small number, treat as to-par. If large (>50), it's total strokes.
+      if (Math.abs(v) <= 50) return v;
+      return null;
     }
+    if (typeof v !== "string") return null;
+    const s = v.trim();
+    if (s === "" || s === "-" || s === "--") return null;
+    if (s === "E" || s === "e") return 0;
+    // Match patterns like "-5", "+4", "5", "-12"
+    const m = s.match(/^([+-]?)(\d{1,2})$/);
+    if (m) {
+      const n = parseInt(m[2], 10);
+      return m[1] === "-" ? -n : n;
+    }
+    return null;
+  };
 
-    const event = mastersEvent || data.events[0];
+  // Strategy 1: c.score as string directly (most common for live golf)
+  let result = tryParse(c.score);
+  if (result !== null) return result;
+
+  // Strategy 2: c.score.displayValue / c.score.value (object form)
+  if (typeof c.score === "object" && c.score !== null) {
+    result = tryParse(c.score.displayValue);
+    if (result !== null) return result;
+    result = tryParse(c.score.value);
+    if (result !== null) return result;
+  }
+
+  // Strategy 3: statistics array with "score" or "toPar" entry
+  if (Array.isArray(c.statistics)) {
+    for (const stat of c.statistics) {
+      const n = (stat.name || "").toLowerCase();
+      const abbr = (stat.abbreviation || "").toLowerCase();
+      if (n === "score" || n === "topar" || n === "to par" || abbr === "to par" || abbr === "topar") {
+        result = tryParse(stat.displayValue);
+        if (result !== null) return result;
+        result = tryParse(stat.value);
+        if (result !== null) return result;
+      }
+    }
+  }
+
+  // Strategy 4: status.position or similar nested fields
+  if (c.status) {
+    result = tryParse(c.status.score);
+    if (result !== null) return result;
+    if (c.status.position) {
+      // Sometimes position contains a score field
+      result = tryParse(c.status.position.score);
+      if (result !== null) return result;
+    }
+  }
+
+  return null;
+}
+
+function parseThruField(c) {
+  // Try multiple common locations for "holes completed"
+  const thru = c.status?.thru ?? c.thru ?? c.status?.holesPlayed;
+  if (thru === undefined || thru === null) return "";
+  if (thru === 18 || thru === "18") return "F";
+  if (typeof thru === "number") return thru.toString();
+  return thru.toString();
+}
+
+async function fetchFromUrl(url) {
+  const resp = await fetch(url, { cache: "no-store" });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return await resp.json();
+}
+
+async function fetchScores() {
+  let data = null;
+  let lastError = null;
+
+  // Try each endpoint
+  for (const url of ESPN_URLS) {
+    try {
+      data = await fetchFromUrl(url);
+      if (data?.events?.length) break;
+    } catch (err) {
+      lastError = err;
+      console.warn(`Failed to fetch ${url}:`, err.message);
+    }
+  }
+
+  if (!data) {
+    showError(`Could not reach ESPN API. ${lastError?.message || ""}`);
+    return false;
+  }
+
+  try {
+    // Find the Masters event (or fall back to first/current event)
+    let event = data.events?.find(e =>
+      (e.name || "").toLowerCase().includes("masters") ||
+      (e.shortName || "").toLowerCase().includes("masters")
+    );
+    if (!event) event = data.events?.[0];
+    if (!event) throw new Error("No golf events in API response");
+
     const competition = event.competitions?.[0];
-    if (!competition) throw new Error("No competition data");
+    if (!competition) throw new Error("No competition data in event");
 
     // Determine tournament status
-    const status = event.status?.type?.name || "unknown";
-    tournamentStatus = status;
-    tournamentRound = event.status?.type?.description || "";
+    tournamentStatus = event.status?.type?.name || event.status?.type?.state || "unknown";
+    tournamentRound = event.status?.type?.detail || event.status?.type?.description || "";
 
-    // Parse competitors
     const competitors = competition.competitors || [];
+
+    // DEBUG: dump the first competitor once, so we can see the real structure
+    if (!debugDumped && competitors.length > 0) {
+      console.log("=== ESPN API DEBUG — first competitor structure ===");
+      console.log(JSON.stringify(competitors[0], null, 2));
+      console.log("=== First 5 competitors (name + parsed score) ===");
+      competitors.slice(0, 5).forEach(c => {
+        console.log({
+          name: c.athlete?.displayName,
+          rawScore: c.score,
+          parsedScore: parseGolferScore(c),
+          thru: parseThruField(c)
+        });
+      });
+      debugDumped = true;
+    }
+
     const newScores = {};
+    let matchedCount = 0;
 
     for (const c of competitors) {
-      const name = c.athlete?.displayName || c.athlete?.shortName || "";
+      const name = c.athlete?.displayName || c.athlete?.fullName || c.athlete?.shortName || "";
       const shortName = matchPlayer(name);
       if (!shortName) continue;
 
-      let score = 0;
-      const scoreStr = c.score?.displayValue || c.score?.value?.toString() || "0";
-      if (scoreStr === "E" || scoreStr === "0") score = 0;
-      else score = parseInt(scoreStr, 10) || 0;
+      const score = parseGolferScore(c);
+      if (score === null) continue; // Skip if we genuinely can't parse
+      matchedCount++;
 
-      const thru = c.status?.thru || c.thru || "";
-      const pos = c.status?.position?.displayName || c.sortOrder?.toString() || "";
-
-      newScores[shortName] = { score, thru, position: pos, displayScore: scoreStr };
+      newScores[shortName] = {
+        score,
+        thru: parseThruField(c),
+        position: c.status?.position?.displayName || "",
+        espnName: name
+      };
     }
 
-    if (Object.keys(newScores).length > 0) {
-      playerScores = newScores;
-      return true;
-    } else {
-      throw new Error("Could not match any players");
+    if (matchedCount === 0) {
+      throw new Error(`Matched 0 players (processed ${competitors.length}). Check console for API structure.`);
     }
+
+    playerScores = newScores;
+    console.log(`✓ Fetched ${matchedCount} player scores from ESPN`);
+    return true;
   } catch (err) {
-    console.error("ESPN fetch error:", err);
-    document.getElementById("errorMsg").style.display = "block";
-    document.getElementById("errorMsg").innerHTML =
-      `<strong>⚠️ Could not fetch live scores:</strong> ${err.message}. Showing last known data. Will retry in 5 minutes.`;
+    console.error("Parse error:", err);
+    showError(`Could not parse ESPN data: ${err.message}. Check browser console (F12) for details.`);
     return false;
   }
+}
+
+function showError(msg) {
+  const el = document.getElementById("errorMsg");
+  el.style.display = "block";
+  el.innerHTML = `<strong>⚠️ ${msg}</strong> Will retry in 5 minutes.`;
 }
 
 // ── Rendering ──
