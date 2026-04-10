@@ -65,8 +65,12 @@
   .loading{text-align:center;padding:40px;color:var(--muted);font-size:.95rem}
   .loading .spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .error-msg{background:#fff3e0;border-left:4px solid #ff9800;padding:12px 14px;margin-bottom:18px;font-size:.85rem;border-radius:3px}
+  .error-msg{background:#ffebee;border:2px solid var(--red);border-left:6px solid var(--red);padding:14px 16px;margin-bottom:18px;font-size:.9rem;border-radius:4px;color:#b71c1c;box-shadow:0 2px 6px rgba(198,40,40,.15)}
+  .error-msg strong{color:var(--red);display:block;margin-bottom:4px;font-size:.95rem}
+  .error-msg .sub{color:#7f1d1d;font-size:.82rem;display:block;margin-top:4px}
   .commentary{background:#fff;border:1px solid var(--border);border-radius:6px;padding:18px 22px;margin:18px 0;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  .commentary.recap{background:linear-gradient(to bottom,#fdfaf2,#fff);border-left:4px solid var(--gold)}
+  .commentary.recap h3{color:var(--green-dark)}
   .commentary h3{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--green);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--gold)}
   .commentary p{font-size:.88rem;line-height:1.6;margin-bottom:8px}
   .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:14px 0}
@@ -108,11 +112,11 @@
         <tr>
           <th class="center">#</th>
           <th>Entry</th>
+          <th class="center">Total</th>
           <th class="center">Pick 1</th>
           <th class="center">Pick 2</th>
           <th class="center">Pick 3</th>
           <th class="center">Pick 4</th>
-          <th class="center">Total</th>
           <th class="center">Alt</th>
         </tr>
       </thead>
@@ -131,6 +135,31 @@
   <div id="analysisSection" class="commentary" style="display:none">
     <h3>📊 Pool Snapshot</h3>
     <div id="analysisContent"></div>
+  </div>
+
+  <div class="commentary recap">
+    <h3>📖 Day 1 Recap — Thursday, April 9</h3>
+    <p>Round 1 is in the books, and the leaderboard didn't quite play to script. Most of the elite favorites went out and shot under par — but the two biggest LIV names laid eggs, completely flipping the pool standings from what most entries were hoping for.</p>
+
+    <h4 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--green-dark);margin-top:14px;margin-bottom:6px">🟢 Heroes of the Day</h4>
+    <p><strong>Rory McIlroy (-5, 67)</strong> — The defending champion couldn't have asked for a better opening to his title defense. It's his first sub-70 Thursday at Augusta since 2018, and a massive improvement on last year when he was 7 shots back after Day 1. Notably, this is also the first time since 2011 he's led overnight at Augusta — a tournament he'd rather forget. He's the engine of every entry that picked him.</p>
+    <p><strong>Patrick Reed (-3, 69)</strong> — The biggest value pick of the pool delivered. Reed opened birdie-eagle to become just the sixth player in Masters history to start a tournament that way, then added another eagle on the par-5 8th to turn in 31. Two bogeys on the back kept him from a truly historic round, but he sits T3 — and only 2 entries had him.</p>
+    <p><strong>Justin Rose (-2, 70)</strong> — Reached -4 twice during his round before a bogey-bogey finish dropped him to -2. Still good for a top-10 finish — his 9th in 21 Masters starts (only Jack Nicklaus has more).</p>
+    <p><strong>Scottie Scheffler (-2, 70)</strong> — Eagled the par-5 second and birdied the third to quickly reach -3, then went 14 pars and a bogey the rest of the way. Hit 12 of 14 fairways — his best driving accuracy in 25 rounds. The ball-striking is back.</p>
+    <p><strong>Tommy Fleetwood (-1, 71)</strong> — Quietly steady. Was at -3 through 11 before bogeying his final hole to finish with five birdies against four bogeys.</p>
+
+    <h4 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--green-dark);margin-top:14px;margin-bottom:6px">🔴 Disasters of the Day</h4>
+    <p><strong>Jon Rahm (+6, 78)</strong> — Catastrophic. The 2023 champion failed to make a single birdie all day, with four bogeys on the front and a double on the back. He'll need a herculean Friday just to make the cut. This single result is the biggest drag on the pool — 13 entries have him.</p>
+    <p><strong>Bryson DeChambeau (+4, 76)</strong> — A triple bogey on 11 (three shots to escape a bunker) derailed what was an otherwise manageable round. He bogeyed two of his last three holes and is also fighting for the cut. His own lucky bounce off a patron on the par-3 6th saved par; nothing else went his way.</p>
+    <p><strong>Robert MacIntyre (+8, 80)</strong> — Carded a 9 on the par-5 15th after going in the water. The Scotsman flipped off the hole from the fairway in frustration — possibly the most relatable moment of the day.</p>
+    <p><strong>Ludvig Åberg (+3, 75)</strong> — Started on fire with three birdies in his first six holes, then completely unraveled with a double on 9, bogey-bogey on 10–11, and another double on 13. Finished T49. The most popular pick in the pool (19 entries) became one of its biggest drags.</p>
+
+    <h4 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--green-dark);margin-top:14px;margin-bottom:6px">🎯 The Pool Story</h4>
+    <p><strong>Cody Pantages took the early lead at -11</strong>, riding the perfect storm of McIlroy, Rose, Schauffele, and Scheffler. None of his picks blew up. He's the only entry with all four picks under par after Round 1.</p>
+    <p><strong>Mike Scarr sits 2nd at -9</strong> as the only entry to have picked Patrick Reed. The Reed call alone is what separates him from the rest of the Scarr clan, who all stacked the chalk favorites.</p>
+    <p><strong>The Scarr family — Matt and Ryan — tied for 3rd at -6</strong> with the same four picks (Aberg, McIlroy, Schauffele, Scheffler) — would have been better with anyone other than Aberg in their lineup, but McIlroy is doing the heavy lifting.</p>
+    <p><strong>The bottom of the standings is dominated by entries that doubled up on the LIV pair.</strong> Anyone who picked both Rahm and DeChambeau is +10 from those two picks alone, which is nearly impossible to recover from. Five entries are in this trap.</p>
+    <p style="margin-top:10px;font-size:.82rem;color:var(--muted);font-style:italic">Remember: last year's champion (McIlroy) was 7 shots back after Round 1 and still won. With 54 holes remaining, any entry within 10 shots of the lead has a real shot.</p>
   </div>
 
   <div class="footer">
@@ -206,9 +235,37 @@ const NAME_MAP = {
 };
 
 // ── State ──
-let playerScores = {}; // shortName -> {score, thru, position, round}
+// Day 1 final scores — used as fallback if ESPN API fails
+const FALLBACK_SCORES = {
+  "Aberg":     { score: 3,  thru: "F", position: "T49", source: "day1" },
+  "Bhatia":    { score: 1,  thru: "F", position: "",    source: "day1" },
+  "Conners":   { score: 3,  thru: "F", position: "",    source: "day1" },
+  "DeChambeau":{ score: 4,  thru: "F", position: "",    source: "day1" },
+  "Fitzpatrick":{score: 1,  thru: "F", position: "",    source: "day1" },
+  "Fleetwood": { score: -1, thru: "F", position: "",    source: "day1" },
+  "Gotterup":  { score: 2,  thru: "F", position: "",    source: "day1" },
+  "Hojgaard":  { score: 0,  thru: "F", position: "",    source: "day1" },
+  "Hovland":   { score: 3,  thru: "F", position: "",    source: "day1" },
+  "Kim":       { score: 1,  thru: "F", position: "",    source: "day1" },
+  "Koepka":    { score: 0,  thru: "F", position: "",    source: "day1" },
+  "Lee":       { score: 1,  thru: "F", position: "",    source: "day1" },
+  "MacIntyre": { score: 8,  thru: "F", position: "",    source: "day1" },
+  "Matsuyama": { score: 1,  thru: "F", position: "",    source: "day1" },
+  "McIlroy":   { score: -5, thru: "F", position: "T1",  source: "day1" },
+  "Morikawa":  { score: 2,  thru: "F", position: "",    source: "day1" },
+  "Rahm":      { score: 6,  thru: "F", position: "",    source: "day1" },
+  "Reed":      { score: -3, thru: "F", position: "T3",  source: "day1" },
+  "Rose":      { score: -2, thru: "F", position: "T6",  source: "day1" },
+  "Schauffele":{ score: -2, thru: "F", position: "T6",  source: "day1" },
+  "Scheffler": { score: -2, thru: "F", position: "T6",  source: "day1" },
+  "Young":     { score: 1,  thru: "F", position: "",    source: "day1" },
+  "Zalatoris": { score: 2,  thru: "F", position: "",    source: "day1" }
+};
+
+let playerScores = { ...FALLBACK_SCORES }; // Start with fallback so page renders immediately
 let tournamentStatus = "unknown";
 let tournamentRound = "";
+let usingFallback = true; // Will flip to false on successful API fetch
 
 // ── ESPN API ──
 // Try the leaderboard endpoint first (more detailed), fallback to scoreboard
@@ -219,17 +276,43 @@ const ESPN_URLS = [
 
 let debugDumped = false; // Log raw response once for debugging
 
+// Normalize strings: lowercase + strip diacritics + replace special characters
+// (Å→A, é→e, ø→o, æ→ae, ß→ss, etc.)
+function normalize(s) {
+  return (s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // strip combining diacritics
+    .replace(/ø/gi, "o")
+    .replace(/æ/gi, "ae")
+    .replace(/ß/gi, "ss")
+    .replace(/ł/gi, "l")
+    .replace(/đ/gi, "d")
+    .toLowerCase();
+}
+
 function matchPlayer(espnName) {
   if (!espnName) return null;
-  const lower = espnName.toLowerCase();
+  const lower = normalize(espnName);
+  // Common last names that need first-name disambiguation
+  const ambiguous = new Set(["lee", "kim", "young", "rose"]);
+
   for (const [shortName, keywords] of Object.entries(NAME_MAP)) {
-    // Check all keywords match
-    const allMatch = keywords.every(k => lower.includes(k.toLowerCase()));
-    if (allMatch) return shortName;
-    // Fall back to last-name-only match for unique last names
-    const lastName = keywords[keywords.length - 1].toLowerCase();
-    if (lower.includes(lastName) && !["lee","kim","young","rose"].includes(lastName)) {
-      return shortName;
+    const normKeywords = keywords.map(normalize);
+    // The last entry in keywords is conventionally the last name
+    const lastName = normKeywords[normKeywords.length - 1];
+    // The first entry is conventionally the first name
+    const firstName = normKeywords[0];
+
+    if (ambiguous.has(lastName)) {
+      // Require both first and last name match
+      if (lower.includes(firstName) && lower.includes(lastName)) {
+        return shortName;
+      }
+    } else {
+      // Unique last name — last name match is enough
+      if (lower.includes(lastName)) {
+        return shortName;
+      }
     }
   }
   return null;
@@ -329,7 +412,7 @@ async function fetchScores() {
   }
 
   if (!data) {
-    showError(`Could not reach ESPN API. ${lastError?.message || ""}`);
+    showError(`Could not reach ESPN API: ${lastError?.message || "network error"}`);
     return false;
   }
 
@@ -383,7 +466,8 @@ async function fetchScores() {
         score,
         thru: parseThruField(c),
         position: c.status?.position?.displayName || "",
-        espnName: name
+        espnName: name,
+        source: "live"
       };
     }
 
@@ -391,20 +475,29 @@ async function fetchScores() {
       throw new Error(`Matched 0 players (processed ${competitors.length}). Check console for API structure.`);
     }
 
-    playerScores = newScores;
+    // Merge: live data overrides fallback, but keep fallback for unmatched players
+    playerScores = { ...FALLBACK_SCORES, ...newScores };
+    usingFallback = false;
+    hideError();
     console.log(`✓ Fetched ${matchedCount} player scores from ESPN`);
     return true;
   } catch (err) {
     console.error("Parse error:", err);
-    showError(`Could not parse ESPN data: ${err.message}. Check browser console (F12) for details.`);
+    showError(`Could not parse ESPN data: ${err.message}`);
     return false;
   }
 }
 
 function showError(msg) {
+  usingFallback = true;
+  playerScores = { ...FALLBACK_SCORES }; // Reset to fallback
   const el = document.getElementById("errorMsg");
   el.style.display = "block";
-  el.innerHTML = `<strong>⚠️ ${msg}</strong> Will retry in 5 minutes.`;
+  el.innerHTML = `<strong>Live scores from ESPN unavailable</strong><span class="sub">Showing fallback data from end of Day 1 (Thursday). Will retry every 5 minutes.</span>`;
+}
+
+function hideError() {
+  document.getElementById("errorMsg").style.display = "none";
 }
 
 // ── Rendering ──
@@ -514,6 +607,9 @@ function renderStandings() {
     html += `<td class="rank ${rankClass}">${entry.rankDisplay}</td>`;
     html += `<td class="name">${entry.name}</td>`;
 
+    const totalClass = getScoreClass(entry.total);
+    html += `<td class="total ${totalClass}">${formatScore(entry.total)}</td>`;
+
     entry.pickScores.forEach(ps => {
       const cls = ps.score === null ? "unknown" : getScoreClass(ps.score);
       const scoreStr = ps.score === null ? "?" : formatScore(ps.score);
@@ -521,8 +617,6 @@ function renderStandings() {
       html += `<td class="pick"><span class="player-name">${ps.name}</span><span class="score ${cls}">${scoreStr}</span>${thruStr}</td>`;
     });
 
-    const totalClass = getScoreClass(entry.total);
-    html += `<td class="total ${totalClass}">${formatScore(entry.total)}</td>`;
     html += `<td class="alternate">${entry.alt}</td>`;
     html += `</tr>`;
   });
