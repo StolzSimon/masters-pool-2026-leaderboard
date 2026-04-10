@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masters Pool 2026 — Round 1 Standings</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #006747;
+    --green-dark: #00422e;
+    --gold: #c8a951;
+    --cream: #fdf8ef;
+    --dark: #1a1a1a;
+    --muted: #6b6b6b;
+    --border: #e0d8c8;
+    --row-alt: #f7f3ea;
+    --red: #c62828;
+    --good: #2e7d32;
+    --highlight: #fff8d6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    padding: 24px 16px;
+    line-height: 1.5;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 3px solid var(--green);
+  }
+
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 2rem;
+    color: var(--green);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+
+  .header .subtitle {
+    font-size: 0.92rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .round-badge {
+    display: inline-block;
+    background: var(--green);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 3px;
+    margin-left: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    vertical-align: middle;
+  }
+
+  .disclaimer {
+    background: #fffbe6;
+    border-left: 4px solid var(--gold);
+    padding: 12px 14px;
+    margin-bottom: 18px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    border-radius: 3px;
+  }
+
+  .disclaimer strong { color: var(--green-dark); }
+
+  .instructions {
+    background: #e8f5e9;
+    border-left: 4px solid var(--green);
+    padding: 10px 14px;
+    margin-bottom: 18px;
+    font-size: 0.85rem;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .instructions .icon {
+    font-size: 1.3rem;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 18px;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    min-width: 780px;
+    background: #fff;
+  }
+
+  thead th {
+    background: var(--green);
+    color: #fff;
+    font-weight: 700;
+    text-align: left;
+    padding: 10px 10px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  thead th.center { text-align: center; }
+
+  tbody tr {
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  tbody td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+
+  tbody tr:hover {
+    background: #eef7f1 !important;
+  }
+
+  tbody tr.favorited {
+    background: var(--highlight) !important;
+    font-weight: 600;
+  }
+
+  tbody tr.favorited td:first-child {
+    border-left: 4px solid var(--gold);
+    padding-left: 6px;
+  }
+
+  tbody tr.favorited .name::after {
+    content: " ⭐";
+  }
+
+  .rank {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--green);
+    text-align: center;
+    width: 50px;
+  }
+
+  .rank-1 { color: var(--gold); font-size: 1.35rem; }
+  .rank-2, .rank-3 { color: var(--green-dark); }
+
+  .name {
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+
+  .pick {
+    font-size: 0.82rem;
+    text-align: center;
+  }
+
+  .pick .player-name {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.1;
+  }
+
+  .pick .score {
+    display: block;
+    font-weight: 700;
+    font-size: 0.92rem;
+    margin-top: 1px;
+  }
+
+  .score.under { color: var(--good); }
+  .score.over { color: var(--red); }
+  .score.even { color: var(--dark); }
+  .score.tbd { color: var(--muted); font-style: italic; }
+
+  .est {
+    font-size: 0.7em;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .total {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 1.15rem;
+    text-align: center;
+    padding: 0 8px;
+  }
+
+  .total.under { color: var(--good); }
+  .total.over { color: var(--red); }
+  .total.even { color: var(--dark); }
+
+  .total .partial {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 400;
+    color: var(--muted);
+    font-family: 'Source Sans 3', sans-serif;
+    font-style: italic;
+    margin-top: -2px;
+  }
+
+  .alternate {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: center;
+    margin: 16px 0 8px;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .commentary {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin: 18px 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  .commentary h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    color: var(--green);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--gold);
+  }
+
+  .commentary h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--green-dark);
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+
+  .commentary p {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+
+  .commentary p:last-child { margin-bottom: 0; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin: 14px 0;
+  }
+
+  .stat-card {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 12px 14px;
+  }
+
+  .stat-card .label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .stat-card .value {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--green-dark);
+    line-height: 1.2;
+    margin-top: 3px;
+  }
+
+  .stat-card .detail {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .leaderboard-mini {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 12px 14px;
+    margin: 14px 0;
+  }
+
+  .leaderboard-mini h4 {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    color: var(--green);
+    margin-bottom: 8px;
+  }
+
+  .leaderboard-mini .lb-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+  }
+
+  .leaderboard-mini .lb-row:last-child { border-bottom: none; }
+
+  .leaderboard-mini .lb-row .pos {
+    color: var(--muted);
+    width: 30px;
+  }
+
+  .leaderboard-mini .lb-row .player {
+    flex: 1;
+    font-weight: 600;
+  }
+
+  .leaderboard-mini .lb-row .sc {
+    font-weight: 700;
+    color: var(--good);
+    width: 40px;
+    text-align: right;
+  }
+
+  .leaderboard-mini .lb-row .sc.over { color: var(--red); }
+  .leaderboard-mini .lb-row .sc.even { color: var(--dark); }
+
+  .footer {
+    text-align: center;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 600px) {
+    .header h1 { font-size: 1.5rem; }
+    table { font-size: 0.78rem; }
+    tbody td, thead th { padding: 7px 6px; }
+    .rank { font-size: 1rem; }
+    .total { font-size: 1rem; }
+    .commentary { padding: 14px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="header">
+  <h1>Masters Pool 2026 — Standings <span class="round-badge">After Round 1</span></h1>
+  <div class="subtitle">Augusta National &bull; April 9–12 &bull; Round 1 complete &bull; Round 2 begins Friday</div>
+</div>
+
+<div class="instructions">
+  <span class="icon">⭐</span>
+  <span><strong>Tap any row to mark it as your favorite</strong> — useful for tracking your own entry. Tap again to unmark. Selections are saved on your device.</span>
+</div>
+
+<div class="disclaimer">
+  <strong>📋 Round 1 standings.</strong> Rankings based on cumulative strokes-to-par across each entry's 4 picks (lower = better) — the actual pool pays out by prize money, but this is the closest live proxy. A few smaller picks marked with an asterisk (*) are best estimates pending confirmation. With 54 holes still to play, expect significant movement before Sunday.
+</div>
+
+<div class="leaderboard-mini">
+  <h4>🏆 Tournament Leaderboard — Top 10 After Round 1</h4>
+  <div class="lb-row"><span class="pos">T1</span><span class="player">Rory McIlroy</span><span class="sc">-5</span></div>
+  <div class="lb-row"><span class="pos">T1</span><span class="player">Sam Burns</span><span class="sc">-5</span></div>
+  <div class="lb-row"><span class="pos">T3</span><span class="player">Kurt Kitayama</span><span class="sc">-3</span></div>
+  <div class="lb-row"><span class="pos">T3</span><span class="player">Jason Day</span><span class="sc">-3</span></div>
+  <div class="lb-row"><span class="pos">T3</span><span class="player">Patrick Reed</span><span class="sc">-3</span></div>
+  <div class="lb-row"><span class="pos">T6</span><span class="player">Scottie Scheffler</span><span class="sc">-2</span></div>
+  <div class="lb-row"><span class="pos">T6</span><span class="player">Xander Schauffele</span><span class="sc">-2</span></div>
+  <div class="lb-row"><span class="pos">T6</span><span class="player">Justin Rose</span><span class="sc">-2</span></div>
+  <div class="lb-row"><span class="pos">T6</span><span class="player">Shane Lowry</span><span class="sc">-2</span></div>
+  <div class="lb-row"><span class="pos">T10</span><span class="player">Seven players</span><span class="sc">-1</span></div>
+</div>
+
+<div class="table-wrap">
+<table>
+<thead>
+  <tr>
+    <th class="center">#</th>
+    <th>Entry</th>
+    <th class="center">Pick 1</th>
+    <th class="center">Pick 2</th>
+    <th class="center">Pick 3</th>
+    <th class="center">Pick 4</th>
+    <th class="center">Total</th>
+    <th class="center">Alt</th>
+  </tr>
+</thead>
+<tbody id="standings">
+
+  <tr data-entry="pantages-cody">
+    <td class="rank rank-1">1</td>
+    <td class="name">Pantages, Cody</td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Rose</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Schauffele</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total under">-11</td>
+    <td class="alternate">Zalatoris</td>
+  </tr>
+
+  <tr data-entry="scarr-mike">
+    <td class="rank rank-2">2</td>
+    <td class="name">Scarr, Mike</td>
+    <td class="pick"><span class="player-name">Reed</span><span class="score under">-3</span></td>
+    <td class="pick"><span class="player-name">Rose</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Schauffele</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total under">-9</td>
+    <td class="alternate">Koepka</td>
+  </tr>
+
+  <tr data-entry="scarr-matt">
+    <td class="rank rank-3">T3</td>
+    <td class="name">Scarr, Matt</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Schauffele</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total under">-6</td>
+    <td class="alternate">Rahm</td>
+  </tr>
+
+  <tr data-entry="scarr-ryan">
+    <td class="rank rank-3">T3</td>
+    <td class="name">Scarr, Ryan</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Schauffele</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total under">-6</td>
+    <td class="alternate">Matsuyama</td>
+  </tr>
+
+  <tr data-entry="chan-debby">
+    <td class="rank">T5</td>
+    <td class="name">Chan, Debby</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">Fleetwood</span><span class="score under">-1</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Rose</span><span class="score under">-2</span></td>
+    <td class="total under">-5</td>
+    <td class="alternate">MacIntyre</td>
+  </tr>
+
+  <tr data-entry="thomas-paul">
+    <td class="rank">T5</td>
+    <td class="name">Thomas, Paul</td>
+    <td class="pick"><span class="player-name">DeChambeau</span><span class="score over">+4</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Schauffele</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total under">-5</td>
+    <td class="alternate">Fleetwood</td>
+  </tr>
+
+  <tr data-entry="reynolds-elaine">
+    <td class="rank">7</td>
+    <td class="name">Reynolds, Elaine</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">Hojgaard, N<span class="est">*</span></span><span class="score even">E</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total under">-4</td>
+    <td class="alternate">Rose</td>
+  </tr>
+
+  <tr data-entry="armstrong-larry">
+    <td class="rank">8</td>
+    <td class="name">Armstrong, Larry</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Young</span><span class="score over">+1</span></td>
+    <td class="total under">-3</td>
+    <td class="alternate">Fitzpatrick</td>
+  </tr>
+
+  <tr data-entry="pearce-barb">
+    <td class="rank">T9</td>
+    <td class="name">Pearce, Barb</td>
+    <td class="pick"><span class="player-name">DeChambeau</span><span class="score over">+4</span></td>
+    <td class="pick"><span class="player-name">Fitzpatrick<span class="est">*</span></span><span class="score over">+1</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Schauffele</span><span class="score under">-2</span></td>
+    <td class="total under">-2</td>
+    <td class="alternate">Rahm</td>
+  </tr>
+
+  <tr data-entry="stolz-paola">
+    <td class="rank">T9</td>
+    <td class="name">Stolz, Paola</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">Fleetwood</span><span class="score under">-1</span></td>
+    <td class="pick"><span class="player-name">Rose</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total under">-2</td>
+    <td class="alternate">Young</td>
+  </tr>
+
+  <tr data-entry="armstrong-bob">
+    <td class="rank">T11</td>
+    <td class="name">Armstrong, Bob</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">Schauffele</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Young</span><span class="score over">+1</span></td>
+    <td class="total even">E</td>
+    <td class="alternate">Reed</td>
+  </tr>
+
+  <tr data-entry="docksteader-paul">
+    <td class="rank">T11</td>
+    <td class="name">Docksteader, Paul</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">DeChambeau</span><span class="score over">+4</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total even">E</td>
+    <td class="alternate">Conners</td>
+  </tr>
+
+  <tr data-entry="forbes-heather">
+    <td class="rank">T11</td>
+    <td class="name">Forbes, Heather</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">Fitzpatrick<span class="est">*</span></span><span class="score over">+1</span></td>
+    <td class="pick"><span class="player-name">Kim, Si Woo<span class="est">*</span></span><span class="score over">+1</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="total even">E</td>
+    <td class="alternate">Morikawa</td>
+  </tr>
+
+  <tr data-entry="scarr-don">
+    <td class="rank">T11</td>
+    <td class="name">Scarr, Don</td>
+    <td class="pick"><span class="player-name">Matsuyama<span class="est">*</span></span><span class="score over">+1</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Rahm</span><span class="score over">+6</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total even">E</td>
+    <td class="alternate">Fitzpatrick</td>
+  </tr>
+
+  <tr data-entry="scarr-donna">
+    <td class="rank">T11</td>
+    <td class="name">Scarr, Donna</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">Fitzpatrick<span class="est">*</span></span><span class="score over">+1</span></td>
+    <td class="pick"><span class="player-name">Rose</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total even">E</td>
+    <td class="alternate">Schauffele</td>
+  </tr>
+
+  <tr data-entry="forbes-rob">
+    <td class="rank">16</td>
+    <td class="name">Forbes, Rob</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">Fleetwood</span><span class="score under">-1</span></td>
+    <td class="pick"><span class="player-name">Schauffele</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Young</span><span class="score over">+1</span></td>
+    <td class="total over">+1</td>
+    <td class="alternate">McIlroy</td>
+  </tr>
+
+  <tr data-entry="maitland-anthony">
+    <td class="rank">T17</td>
+    <td class="name">Maitland, Anthony</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Rahm</span><span class="score over">+6</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total over">+2</td>
+    <td class="alternate">Young</td>
+  </tr>
+
+  <tr data-entry="mcbride-andrew">
+    <td class="rank">T17</td>
+    <td class="name">McBride, Andrew</td>
+    <td class="pick"><span class="player-name">Gotterup<span class="est">*</span></span><span class="score over">+2</span></td>
+    <td class="pick"><span class="player-name">Lee, Min Woo<span class="est">*</span></span><span class="score over">+1</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Young</span><span class="score over">+1</span></td>
+    <td class="total over">+2</td>
+    <td class="alternate">Reed</td>
+  </tr>
+
+  <tr data-entry="brown-rob">
+    <td class="rank">T19</td>
+    <td class="name">Brown, Rob</td>
+    <td class="pick"><span class="player-name">DeChambeau</span><span class="score over">+4</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Rahm</span><span class="score over">+6</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total over">+3</td>
+    <td class="alternate">Fitzpatrick</td>
+  </tr>
+
+  <tr data-entry="hayes-jacquie">
+    <td class="rank">T19</td>
+    <td class="name">Hayes, Jacquie</td>
+    <td class="pick"><span class="player-name">DeChambeau</span><span class="score over">+4</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Rahm</span><span class="score over">+6</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total over">+3</td>
+    <td class="alternate">Schauffele</td>
+  </tr>
+
+  <tr data-entry="mason-stevio">
+    <td class="rank">T19</td>
+    <td class="name">Mason, Stevio</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">DeChambeau</span><span class="score over">+4</span></td>
+    <td class="pick"><span class="player-name">Fitzpatrick<span class="est">*</span></span><span class="score over">+1</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="total over">+3</td>
+    <td class="alternate">Fleetwood</td>
+  </tr>
+
+  <tr data-entry="reynolds-rick">
+    <td class="rank">T19</td>
+    <td class="name">Reynolds, Rick</td>
+    <td class="pick"><span class="player-name">DeChambeau</span><span class="score over">+4</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Rahm</span><span class="score over">+6</span></td>
+    <td class="pick"><span class="player-name">Schauffele</span><span class="score under">-2</span></td>
+    <td class="total over">+3</td>
+    <td class="alternate">Fleetwood</td>
+  </tr>
+
+  <tr data-entry="scarr-rd">
+    <td class="rank">T19</td>
+    <td class="name">Scarr, RD</td>
+    <td class="pick"><span class="player-name">Rahm</span><span class="score over">+6</span></td>
+    <td class="pick"><span class="player-name">Schauffele</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Young</span><span class="score over">+1</span></td>
+    <td class="total over">+3</td>
+    <td class="alternate">Aberg</td>
+  </tr>
+
+  <tr data-entry="scarr-rj">
+    <td class="rank">T19</td>
+    <td class="name">Scarr, RJ</td>
+    <td class="pick"><span class="player-name">DeChambeau</span><span class="score over">+4</span></td>
+    <td class="pick"><span class="player-name">McIlroy</span><span class="score under">-5</span></td>
+    <td class="pick"><span class="player-name">Rahm</span><span class="score over">+6</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total over">+3</td>
+    <td class="alternate">Reed</td>
+  </tr>
+
+  <tr data-entry="thornton-rob">
+    <td class="rank">25</td>
+    <td class="name">Thornton, Rob</td>
+    <td class="pick"><span class="player-name">Morikawa</span><span class="score over">+2</span></td>
+    <td class="pick"><span class="player-name">Rahm</span><span class="score over">+6</span></td>
+    <td class="pick"><span class="player-name">Schauffele</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total over">+4</td>
+    <td class="alternate">Reed</td>
+  </tr>
+
+  <tr data-entry="ainge-terry">
+    <td class="rank">T26</td>
+    <td class="name">Ainge, Terry</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">Rahm</span><span class="score over">+6</span></td>
+    <td class="pick"><span class="player-name">Schauffele</span><span class="score under">-2</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total over">+5</td>
+    <td class="alternate">Fleetwood</td>
+  </tr>
+
+  <tr data-entry="stolz-simon">
+    <td class="rank">T26</td>
+    <td class="name">Stolz, Simon</td>
+    <td class="pick"><span class="player-name">DeChambeau</span><span class="score over">+4</span></td>
+    <td class="pick"><span class="player-name">Rahm</span><span class="score over">+6</span></td>
+    <td class="pick"><span class="player-name">Reed</span><span class="score under">-3</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total over">+5</td>
+    <td class="alternate">Fitzpatrick</td>
+  </tr>
+
+  <tr data-entry="kishi-glenn">
+    <td class="rank">28</td>
+    <td class="name">Kishi, Glenn</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">DeChambeau</span><span class="score over">+4</span></td>
+    <td class="pick"><span class="player-name">Matsuyama<span class="est">*</span></span><span class="score over">+1</span></td>
+    <td class="pick"><span class="player-name">Rose</span><span class="score under">-2</span></td>
+    <td class="total over">+6</td>
+    <td class="alternate">Hovland</td>
+  </tr>
+
+  <tr data-entry="pearce-dave">
+    <td class="rank">29</td>
+    <td class="name">Pearce, Dave</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">Fleetwood</span><span class="score under">-1</span></td>
+    <td class="pick"><span class="player-name">MacIntyre</span><span class="score over">+8</span></td>
+    <td class="pick"><span class="player-name">Scheffler</span><span class="score under">-2</span></td>
+    <td class="total over">+8</td>
+    <td class="alternate">Rose</td>
+  </tr>
+
+  <tr data-entry="leslie-jason">
+    <td class="rank">T30</td>
+    <td class="name">Leslie, Jason</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">Conners<span class="est">*</span></span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">DeChambeau</span><span class="score over">+4</span></td>
+    <td class="pick"><span class="player-name">Fleetwood</span><span class="score under">-1</span></td>
+    <td class="total over">+9</td>
+    <td class="alternate">Rahm</td>
+  </tr>
+
+  <tr data-entry="mcbride-gary">
+    <td class="rank">T30</td>
+    <td class="name">McBride, Gary</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">DeChambeau</span><span class="score over">+4</span></td>
+    <td class="pick"><span class="player-name">Fitzpatrick<span class="est">*</span></span><span class="score over">+1</span></td>
+    <td class="pick"><span class="player-name">Young</span><span class="score over">+1</span></td>
+    <td class="total over">+9</td>
+    <td class="alternate">Scheffler</td>
+  </tr>
+
+  <tr data-entry="ball-colin">
+    <td class="rank">32</td>
+    <td class="name">Ball, Colin</td>
+    <td class="pick"><span class="player-name">Bhatia<span class="est">*</span></span><span class="score over">+1</span></td>
+    <td class="pick"><span class="player-name">Conners<span class="est">*</span></span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">Fleetwood</span><span class="score under">-1</span></td>
+    <td class="pick"><span class="player-name">MacIntyre</span><span class="score over">+8</span></td>
+    <td class="total over">+11</td>
+    <td class="alternate">Fitzpatrick</td>
+  </tr>
+
+  <tr data-entry="scarr-ben">
+    <td class="rank">33</td>
+    <td class="name">Scarr, Ben</td>
+    <td class="pick"><span class="player-name">Aberg</span><span class="score over">+3</span></td>
+    <td class="pick"><span class="player-name">DeChambeau</span><span class="score over">+4</span></td>
+    <td class="pick"><span class="player-name">Fitzpatrick<span class="est">*</span></span><span class="score over">+1</span></td>
+    <td class="pick"><span class="player-name">Rahm</span><span class="score over">+6</span></td>
+    <td class="total over">+14</td>
+    <td class="alternate">Scheffler</td>
+  </tr>
+
+</tbody>
+</table>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-dot" style="background:#2e7d32;"></span> Under par</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#c62828;"></span> Over par</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#fff8d6; border:1px solid #c8a951;"></span> Your favorites (tap to mark)</div>
+  <div class="legend-item"><span class="est">*</span> Estimated score (pending confirmation)</div>
+</div>
+
+<div class="commentary">
+  <h3>📊 Round 1 Recap & Analysis</h3>
+
+  <p>Round 1 is in the books, and the leaderboard didn't quite play to script. Most of the elite favorites went out and shot under par — but the two biggest LIV names laid eggs, completely flipping the pool standings from what most entries were hoping for.</p>
+
+  <h4>🟢 Heroes of the Day</h4>
+  <p><strong>Rory McIlroy (-5, 67)</strong> — The defending champion couldn't have asked for a better opening to his title defense. It's his first sub-70 Thursday at Augusta since 2018, and a massive improvement on last year when he was 7 shots back after Day 1. Notably, this is also the first time since 2011 he's led overnight at Augusta — a tournament he'd rather forget. He's the engine of every entry that picked him.</p>
+  <p><strong>Patrick Reed (-3, 69)</strong> — The biggest value pick of the pool delivered. Reed opened birdie-eagle to become just the sixth player in Masters history to start a tournament that way, then added another eagle on the par-5 8th to turn in 31. Two bogeys on the back kept him from a truly historic round, but he sits T3 — and only 2 entries had him.</p>
+  <p><strong>Justin Rose (-2, 70)</strong> — Reached -4 twice during his round before a bogey-bogey finish dropped him to -2. Still good for a top-10 finish — his 9th in 21 Masters starts (only Jack Nicklaus has more).</p>
+  <p><strong>Scottie Scheffler (-2, 70)</strong> — Eagled the par-5 second and birdied the third to quickly reach -3, then went 14 pars and a bogey the rest of the way. Hit 12 of 14 fairways — his best driving accuracy in 25 rounds. The ball-striking is back.</p>
+  <p><strong>Tommy Fleetwood (-1, 71)</strong> — Quietly steady. Was at -3 through 11 before bogeying his final hole to finish with five birdies against four bogeys.</p>
+
+  <h4>🔴 Disasters of the Day</h4>
+  <p><strong>Jon Rahm (+6, 78)</strong> — Catastrophic. The 2023 champion failed to make a single birdie all day, with four bogeys on the front and a double on the back. He'll need a herculean Friday just to make the cut. This single result is the biggest drag on the pool — 13 entries have him.</p>
+  <p><strong>Bryson DeChambeau (+4, 76)</strong> — A triple bogey on 11 (three shots to escape a bunker) derailed what was an otherwise manageable round. He bogeyed two of his last three holes and is also fighting for the cut. His own lucky bounce off a patron on the par-3 6th saved par; nothing else went his way.</p>
+  <p><strong>Robert MacIntyre (+8, 80)</strong> — Carded a 9 on the par-5 15th after going in the water. The Scotsman flipped off the hole from the fairway in frustration — possibly the most relatable moment of the day.</p>
+  <p><strong>Ludvig Åberg (+3, 75)</strong> — Started on fire with three birdies in his first six holes, then completely unraveled with a double on 9, bogey-bogey on 10–11, and another double on 13. Finished T49. The most popular pick in the pool (19 entries) became one of its biggest drags.</p>
+
+  <h4>📊 Pool Snapshot</h4>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label">Most Popular Pick</div>
+      <div class="value">Ludvig Åberg</div>
+      <div class="detail">19 of 33 entries (58%) — finished +3</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Hero of the Day</div>
+      <div class="value">Rory McIlroy</div>
+      <div class="detail">In 15 entries — clubhouse leader at -5</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Chalk Anchor</div>
+      <div class="value">Scottie Scheffler</div>
+      <div class="detail">In 21 entries + 2 alts — solid -2 start</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">LIV Trap</div>
+      <div class="value">Rahm + DeChambeau</div>
+      <div class="detail">14 + 13 entries — combined +10</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Best Value Pick</div>
+      <div class="value">Patrick Reed</div>
+      <div class="detail">Only 2 entries had him — finished T3 at -3</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Cut Concerns</div>
+      <div class="value">Rahm, DeChambeau, MacIntyre</div>
+      <div class="detail">All in real danger of missing the weekend</div>
+    </div>
+  </div>
+
+  <h4>🎯 The Story So Far</h4>
+  <p><strong>Cody Pantages takes the early lead at -11</strong>, riding the perfect storm of McIlroy, Rose, Schauffele, and Scheffler. None of his picks blew up. He's the only entry with all four picks under par after Round 1.</p>
+  <p><strong>Mike Scarr sits 2nd at -9</strong> as the only entry to have picked Patrick Reed. The Reed call alone is what separates him from the rest of the Scarr clan, who all stacked the chalk favorites.</p>
+  <p><strong>The Scarr brothers Matt and Ryan are tied for 3rd at -6</strong> with the same four picks (Aberg, McIlroy, Schauffele, Scheffler) — would have been better with anyone other than Aberg in their lineup, but McIlroy is doing the heavy lifting.</p>
+  <p><strong>The bottom of the standings is dominated by entries that doubled up on the LIV pair.</strong> Anyone who picked both Rahm and DeChambeau is +10 from those two picks alone, which is nearly impossible to recover from. Five entries are in this trap and sit between +3 and +14.</p>
+
+  <h4>🔮 What to Watch in Round 2</h4>
+  <p><strong>The cut line</strong> — Augusta cuts to the top 50 and ties. Players currently outside that line who appear in pool entries: Rahm (+6), MacIntyre (+8), DeChambeau (+4), and the Aberg/Conners crowd at +3 are all on the bubble. If any of them miss the cut, those entries lose all earning potential from that pick.</p>
+  <p><strong>Sam Burns</strong> — The other co-leader at -5 isn't on a single entry in this pool. If he holds form, he becomes the spoiler nobody picked.</p>
+  <p><strong>Don't write off any entry yet.</strong> Last year's champion (McIlroy) was 7 shots back after Round 1 and still won. With 54 holes remaining, any entry within 10 shots of the lead has a real shot.</p>
+</div>
+
+<div class="footer">
+  Round 1 final standings &bull; Updated end of Thursday April 9, 2026<br>
+  Asterisks (*) indicate scores estimated pending official confirmation<br>
+  Final pool placement is by total prize money earned, not strokes
+</div>
+
+</div>
+
+<script>
+  // Persistent favorites using localStorage with fallback
+  const STORAGE_KEY = 'masters-pool-2026-favorites';
+
+  function loadFavorites() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function saveFavorites(favorites) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...favorites]));
+    } catch (e) {
+      // localStorage unavailable — favorites won't persist but still work in-session
+    }
+  }
+
+  const favorites = loadFavorites();
+
+  // Apply saved favorites on load
+  document.querySelectorAll('tbody#standings tr').forEach(row => {
+    const id = row.dataset.entry;
+    if (favorites.has(id)) {
+      row.classList.add('favorited');
+    }
+    row.addEventListener('click', () => {
+      const entryId = row.dataset.entry;
+      if (favorites.has(entryId)) {
+        favorites.delete(entryId);
+        row.classList.remove('favorited');
+      } else {
+        favorites.add(entryId);
+        row.classList.add('favorited');
+      }
+      saveFavorites(favorites);
+    });
+  });
+</script>
+
+</body>
+</html>
