@@ -178,7 +178,7 @@
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 17 &bull; Built with Claude</span>
+    <span class="version">App version 18 &bull; Built with Claude</span>
   </div>
 </div>
 
@@ -417,9 +417,29 @@ function parseGolferScore(c) {
 }
 
 function parseThruField(c) {
-  // Try multiple common locations for "holes completed"
-  const thru = c.status?.thru ?? c.thru ?? c.status?.holesPlayed;
-  if (thru === undefined || thru === null) return "";
+  // Try multiple common locations for "holes completed". ESPN's leaderboard
+  // endpoint is inconsistent about where this lives — on some responses it's
+  // at status.thru, on others it's embedded in linescores, position, or the
+  // top level. Return "" if we genuinely can't find it (distinct from "0").
+  let thru =
+    c.status?.thru ??
+    c.thru ??
+    c.status?.holesPlayed ??
+    c.status?.position?.thru ??
+    c.status?.hole;
+
+  // Fallback: check linescores for the latest round with a thru value
+  if ((thru === undefined || thru === null) && Array.isArray(c.linescores)) {
+    for (let i = c.linescores.length - 1; i >= 0; i--) {
+      const ls = c.linescores[i];
+      if (ls && (ls.thru !== undefined && ls.thru !== null)) {
+        thru = ls.thru;
+        break;
+      }
+    }
+  }
+
+  if (thru === undefined || thru === null || thru === "") return "";
   if (thru === 18 || thru === "18") return "F";
   if (typeof thru === "number") return thru.toString();
   return thru.toString();
@@ -491,20 +511,27 @@ async function fetchScores() {
     let activelyPlayingCount = 0;
     let finishedCurrentRoundCount = 0;
     let notStartedCurrentRoundCount = 0;
+    let unknownThruCount = 0;
 
     for (const c of competitors) {
       const name = c.athlete?.displayName || c.athlete?.fullName || c.athlete?.shortName || "";
       const score = parseGolferScore(c);
       const thru = parseThruField(c);
 
-      // Track per-player current-round state from thru
+      // Track per-player current-round state from thru.
+      // IMPORTANT: missing/empty thru is "unknown", NOT "not started" — ESPN
+      // often omits this field entirely, and we must not let missing data
+      // masquerade as a confident "pre-tee" signal.
       const thruNum = parseInt(thru, 10);
       if (thru === "F" || thruNum === 18) {
         finishedCurrentRoundCount++;
       } else if (!isNaN(thruNum) && thruNum >= 1 && thruNum <= 17) {
         activelyPlayingCount++;
-      } else {
+      } else if (thru === "0" || thruNum === 0) {
         notStartedCurrentRoundCount++;
+      } else {
+        // thru is "" / null / unparseable — we genuinely don't know
+        unknownThruCount++;
       }
 
       // Add to full leaderboard regardless of whether it matches a pool pick
@@ -556,15 +583,25 @@ async function fetchScores() {
       }
     } else if (statusDetail.includes("in progress") || statusDetail.includes("inprogress") ||
                statusName === "status_in_progress" || statusState === "in") {
-      // Round is in progress per ESPN. Check if anyone is actually swinging right now.
+      // Round is in progress per ESPN. Decide whether to show LIVE or the
+      // "pre-tee" fallback. We ONLY downgrade to ROUND_PENDING when we have
+      // positive evidence that everyone is pre-tee — i.e., we have usable
+      // thru data for most players and all of it says 0/not-started.
+      // If thru data is missing (unknownThruCount dominates), trust ESPN
+      // and show LIVE rather than confabulating a pre-tee state.
+      const playersWithThruData = activelyPlayingCount + finishedCurrentRoundCount + notStartedCurrentRoundCount;
+      const haveReliableThruData = playersWithThruData >= unknownThruCount && playersWithThruData > 0;
+
       if (activelyPlayingCount > 0) {
         liveState = "LIVE";
-      } else if (notStartedCurrentRoundCount > finishedCurrentRoundCount) {
-        // Round is "in progress" but everyone is still pre-tee — early Friday morning, etc.
+      } else if (haveReliableThruData && notStartedCurrentRoundCount > finishedCurrentRoundCount) {
+        // Round is "in progress" but we have real evidence that everyone is
+        // still pre-tee — early Friday morning, etc.
         liveState = "ROUND_PENDING";
       } else {
-        // ESPN says in progress but nobody's playing and most have finished —
-        // probably late evening when round is winding down. Trust ESPN here.
+        // Either (a) ESPN says in progress, some have finished, none currently
+        // swinging — late-round wind-down; or (b) thru data is missing and we
+        // can't tell — trust ESPN and show LIVE.
         liveState = "LIVE";
       }
     } else if (statusDetail.includes("scheduled") || statusState === "pre") {
@@ -576,7 +613,7 @@ async function fetchScores() {
 
     rawStatusDetail = event.status?.type?.detail || "";
     console.log(`🏌️ Live state: ${liveState} | round: ${currentRoundNum} | ESPN status: "${rawStatusDetail}" (name: "${statusName}", state: "${statusState}")`);
-    console.log(`   players → playing: ${activelyPlayingCount}, finished: ${finishedCurrentRoundCount}, not started: ${notStartedCurrentRoundCount}`);
+    console.log(`   players → playing: ${activelyPlayingCount}, finished: ${finishedCurrentRoundCount}, not started: ${notStartedCurrentRoundCount}, unknown: ${unknownThruCount}`);
 
     // Sort full leaderboard by score ascending
     newLeaderboard.sort((a, b) => a.score - b.score);
