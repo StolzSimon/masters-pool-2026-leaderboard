@@ -266,7 +266,8 @@ let playerScores = { ...FALLBACK_SCORES }; // Start with fallback so page render
 let tournamentStatus = "unknown";
 let tournamentRound = "";
 let usingFallback = true; // Will flip to false on successful API fetch
-let liveState = "ROUND_COMPLETE"; // LIVE | ROUND_COMPLETE | PRE_ROUND | UNKNOWN
+let liveState = "BETWEEN_ROUNDS"; // LIVE | BETWEEN_ROUNDS | PRE_TOURNAMENT | UNKNOWN
+let currentRoundNum = 1;
 
 // Full tournament leaderboard (independent of pool picks) — top 10 for the leaderboard widget
 const FALLBACK_LEADERBOARD = [
@@ -472,11 +473,23 @@ async function fetchScores() {
     let activelyPlayingCount = 0;
     let finishedRoundCount = 0;
     let notStartedCount = 0;
+    let maxRoundsCompleted = 0;
 
     for (const c of competitors) {
       const name = c.athlete?.displayName || c.athlete?.fullName || c.athlete?.shortName || "";
       const score = parseGolferScore(c);
       const thru = parseThruField(c);
+
+      // Count completed rounds from linescores (each entry = one round played)
+      if (Array.isArray(c.linescores)) {
+        const validRounds = c.linescores.filter(ls => {
+          const v = ls?.value;
+          const dv = ls?.displayValue;
+          return (v !== undefined && v !== null && v !== 0) ||
+                 (dv && dv !== "" && dv !== "-" && dv !== "--");
+        }).length;
+        if (validRounds > maxRoundsCompleted) maxRoundsCompleted = validRounds;
+      }
 
       // Track live state from thru values
       const thruNum = parseInt(thru, 10);
@@ -511,17 +524,24 @@ async function fetchScores() {
       throw new Error(`Matched 0 players (processed ${competitors.length}). Check console for API structure.`);
     }
 
-    // Determine actual live state from player activity
+    // Determine actual live state
+    // Priority: someone playing → LIVE; rounds done but nobody playing → BETWEEN_ROUNDS; nothing yet → PRE_TOURNAMENT
     if (activelyPlayingCount > 0) {
       liveState = "LIVE";
+      // The round currently being played is one more than max completed
+      currentRoundNum = maxRoundsCompleted + 1;
+    } else if (maxRoundsCompleted > 0) {
+      liveState = "BETWEEN_ROUNDS";
+      currentRoundNum = maxRoundsCompleted; // The just-completed round
     } else if (finishedRoundCount > competitors.length / 2) {
-      liveState = "ROUND_COMPLETE";
-    } else if (notStartedCount > competitors.length / 2) {
-      liveState = "PRE_ROUND";
+      // Edge case: finished but no linescores yet (shouldn't happen, but safe fallback)
+      liveState = "BETWEEN_ROUNDS";
+      currentRoundNum = 1;
     } else {
-      liveState = "UNKNOWN";
+      liveState = "PRE_TOURNAMENT";
+      currentRoundNum = 0;
     }
-    console.log(`Live state: ${liveState} (playing: ${activelyPlayingCount}, finished: ${finishedRoundCount}, not started: ${notStartedCount})`);
+    console.log(`Live state: ${liveState} | round: ${currentRoundNum} | playing: ${activelyPlayingCount}, finished: ${finishedRoundCount}, not started: ${notStartedCount}, max rounds done: ${maxRoundsCompleted}`);
 
     // Sort full leaderboard by score ascending
     newLeaderboard.sort((a, b) => a.score - b.score);
@@ -732,20 +752,19 @@ function renderAnalysis(standings) {
 // ── Status badge ──
 function updateStatus() {
   const badge = document.getElementById("statusBadge");
-  const roundLabel = tournamentRound || "";
 
   if (liveState === "LIVE") {
     badge.className = "badge badge-live";
-    badge.textContent = "● LIVE" + (roundLabel ? " — " + roundLabel : "");
-  } else if (liveState === "ROUND_COMPLETE") {
+    badge.textContent = "● LIVE — Round " + currentRoundNum;
+  } else if (liveState === "BETWEEN_ROUNDS") {
     badge.className = "badge badge-complete";
-    badge.textContent = "✓ " + (roundLabel ? roundLabel + " Complete" : "Round Complete");
-  } else if (liveState === "PRE_ROUND") {
+    badge.textContent = "✓ Round " + currentRoundNum + " Complete";
+  } else if (liveState === "PRE_TOURNAMENT") {
     badge.className = "badge badge-complete";
-    badge.textContent = "⏰ " + (roundLabel ? roundLabel + " — Pre-tee" : "Pre-tournament");
+    badge.textContent = "⏰ Pre-tournament";
   } else {
     badge.className = "badge badge-complete";
-    badge.textContent = roundLabel || "Tournament";
+    badge.textContent = tournamentRound || "Tournament";
   }
 
   document.getElementById("lastUpdated").textContent = new Date().toLocaleString("en-US", {
