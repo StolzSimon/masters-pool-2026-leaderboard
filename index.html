@@ -106,6 +106,8 @@
   .lb-row.is-live{background:rgba(220,53,69,.04)}
   .lb-row.selectable{cursor:pointer;transition:background .15s ease,transform .1s ease}
   .lb-row.selectable:hover{background:rgba(0,100,60,.06)}
+  .lb-toggle-row{text-align:center;font-size:.78rem;font-weight:600;color:var(--green);padding:8px 0 4px 0;cursor:pointer;border-top:1px solid rgba(0,0,0,.08);margin-top:4px;letter-spacing:.3px;transition:background .15s ease,color .15s ease}
+  .lb-toggle-row:hover{background:rgba(0,100,60,.06);color:var(--green-dark)}
   .lb-row.selectable:active{transform:scale(.995)}
   .lb-row.selected{background:rgba(200,169,81,.22)!important;box-shadow:inset 3px 0 0 var(--gold,#c8a951);padding-left:6px;margin-left:-6px;border-radius:2px}
   .lb-row.selected .player{font-weight:700}
@@ -177,7 +179,7 @@
   <div id="errorMsg" class="error-msg" style="display:none"></div>
 
   <div id="miniLeaderboard" class="leaderboard-mini">
-    <h4>🏆 Masters Tournament Leaderboard — Top 10</h4>
+    <h4>🏆 Masters Tournament Leaderboard</h4>
     <div id="topPlayers"><div class="loading"><div class="spinner"></div><br>Loading leaderboard...</div></div>
   </div>
 
@@ -250,7 +252,7 @@
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 42 &bull; Built with Claude</span>
+    <span class="version">App version 43 &bull; Built with Claude</span>
   </div>
 
   <!-- Prize reconciliation panel (debug tool) — populated by loadLiveScores.
@@ -497,6 +499,7 @@ let usingFallback = true; // Will flip to false on successful API fetch
 let liveState = "UNKNOWN"; // LIVE | ROUND_COMPLETE | TOURNAMENT_COMPLETE | ROUND_PENDING | PRE_TOURNAMENT | UNKNOWN
 let currentRoundNum = 1;
 let selectedPlayerShortName = null; // short name of the top-10 player currently highlighted in standings, or null
+let leaderboardExpanded = false; // whether the Masters leaderboard at top is showing top 10 (false) or top 20 (true)
 
 // ── Calendar-based tournament schedule ──
 // The Masters 2026 runs April 9–12. This is fixed and known, so we use it as
@@ -1163,9 +1166,11 @@ function formatScore(score) {
 
 function renderLeaderboard() {
   const container = document.getElementById("topPlayers");
-  const top10 = fullLeaderboard.slice(0, 10);
+  // Top 10 by default; if user expanded, show top 20.
+  const limit = leaderboardExpanded ? 20 : 10;
+  const players = fullLeaderboard.slice(0, limit);
 
-  if (top10.length === 0) {
+  if (players.length === 0) {
     container.innerHTML = '<div style="color:var(--muted);font-size:.85rem">No leaderboard data available yet.</div>';
     return;
   }
@@ -1179,20 +1184,20 @@ function renderLeaderboard() {
     <span class="prize">Prize</span>
   </div>`;
   let positions = [];
-  top10.forEach((p, idx) => {
+  players.forEach((p, idx) => {
     if (idx === 0) {
       positions.push(1);
-    } else if (p.score === top10[idx - 1].score) {
+    } else if (p.score === players[idx - 1].score) {
       positions.push(positions[idx - 1]);
     } else {
       positions.push(idx + 1);
     }
   });
 
-  top10.forEach((p, idx) => {
+  players.forEach((p, idx) => {
     const pos = positions[idx];
     // Add T prefix if there's a tie at this position
-    const isTied = top10.filter(x => x.score === p.score).length > 1;
+    const isTied = players.filter(x => x.score === p.score).length > 1;
     const prefix = isTied ? "T" : "";
     const cls = getScoreClass(p.score);
 
@@ -1246,6 +1251,13 @@ function renderLeaderboard() {
     </div>`;
   });
 
+  // "Show more / Show less" toggle row appended at the bottom of the
+  // leaderboard. Only shown when there are actually more players to reveal.
+  if (fullLeaderboard.length > 10) {
+    const label = leaderboardExpanded ? "▲ Show Top 10" : `▼ Show Top 20`;
+    html += `<div class="lb-toggle-row" id="lbToggleRow">${label}</div>`;
+  }
+
   container.innerHTML = html;
 
   // Wire up click-to-select
@@ -1255,6 +1267,15 @@ function renderLeaderboard() {
       selectPlayer(selectedPlayerShortName === key ? null : key);
     });
   });
+
+  // Wire up the show more/less toggle
+  const toggleEl = document.getElementById("lbToggleRow");
+  if (toggleEl) {
+    toggleEl.addEventListener("click", () => {
+      leaderboardExpanded = !leaderboardExpanded;
+      renderLeaderboard();
+    });
+  }
 }
 
 function getFullName(shortName) {
