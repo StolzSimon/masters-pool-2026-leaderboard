@@ -1742,28 +1742,104 @@ function renderAnalysis(standings) {
   const content = document.getElementById("analysisContent");
   section.style.display = "block";
 
-  // Count pick popularity
+  // Pick popularity — used for the Most Popular card.
   const pickCounts = {};
   ENTRIES.forEach(e => e.picks.forEach(p => { pickCounts[p] = (pickCounts[p] || 0) + 1; }));
   const mostPicked = Object.entries(pickCounts).sort((a, b) => b[1] - a[1]);
 
-  // Find best & worst scoring picks
-  const picksWithScores = Object.entries(playerScores)
-    .filter(([name]) => pickCounts[name])
-    .sort((a, b) => a[1].score - b[1].score);
+  // Top Earner removed — it's almost always McIlroy and everyone can see that
+  // in the main leaderboard. Replaced with Biggest Drop below.
 
-  const best = picksWithScores[0];
-  const worst = picksWithScores[picksWithScores.length - 1];
+  // Gap to 2nd — dollar distance between the leader and whoever is chasing.
+  const leader = standings[0];
+  const second = standings[1];
+  const gapToSecond = second ? leader.totalPrize - second.totalPrize : 0;
+
+  // Biggest Mover / Biggest Drop — entries with the largest positive and
+  // negative rank deltas vs the baseline (end-of-Friday) ranks. Only
+  // meaningful once live data has landed; while we're on the fallback,
+  // current == baseline by construction so we show placeholders instead.
+  let moverCard, dropCard;
+  if (usingFallback) {
+    moverCard = { label: "Biggest Mover", value: "—", detail: "Awaiting live data" };
+    dropCard  = { label: "Biggest Drop",  value: "—", detail: "Awaiting live data" };
+  } else {
+    let bestDelta = -Infinity, bestEntry = null;
+    let worstDelta = Infinity, worstEntry = null;
+    standings.forEach(e => {
+      const base = BASELINE_RANKS[e.name];
+      if (base == null) return;
+      const delta = base - e.rank;
+      if (delta > bestDelta)  { bestDelta = delta;  bestEntry  = e; }
+      if (delta < worstDelta) { worstDelta = delta; worstEntry = e; }
+    });
+    if (bestEntry && bestDelta > 0) {
+      moverCard = {
+        label: "Biggest Mover",
+        value: bestEntry.name,
+        detail: `▲${bestDelta} — now ${bestEntry.rankDisplay}, was ${BASELINE_RANKS[bestEntry.name]} Friday`
+      };
+    } else {
+      moverCard = { label: "Biggest Mover", value: "No movement yet", detail: "vs end of Friday" };
+    }
+    if (worstEntry && worstDelta < 0) {
+      dropCard = {
+        label: "Biggest Drop",
+        value: worstEntry.name,
+        detail: `▼${-worstDelta} — now ${worstEntry.rankDisplay}, was ${BASELINE_RANKS[worstEntry.name]} Friday`
+      };
+    } else {
+      dropCard = { label: "Biggest Drop", value: "No drops yet", detail: "vs end of Friday" };
+    }
+  }
+
+  // Cut Damage — how many entries have at least one primary pick that MC'd.
+  // Uses the standings pickScores which already carry the missedCut flag.
+  const entriesHitByCut = standings.filter(e =>
+    e.pickScores.some(ps => ps.missedCut || ps.notInField)
+  ).length;
+  const cutPct = Math.round(entriesHitByCut / ENTRIES.length * 100);
 
   let html = `<div class="stats-grid">`;
-  html += `<div class="stat-card"><div class="label">Pool Leader</div><div class="value">${standings[0].name}</div><div class="detail">${formatPrizeCompact(standings[0].totalPrize)} projected</div></div>`;
-  html += `<div class="stat-card"><div class="label">Most Popular Pick</div><div class="value">${getFullName(mostPicked[0][0])}</div><div class="detail">${mostPicked[0][1]} of 33 entries (${Math.round(mostPicked[0][1]/33*100)}%)</div></div>`;
-  if (best) html += `<div class="stat-card"><div class="label">Best Scoring Pick</div><div class="value">${getFullName(best[0])}</div><div class="detail">${formatScore(best[1].score)} — in ${pickCounts[best[0]]} entries</div></div>`;
-  if (worst) html += `<div class="stat-card"><div class="label">Worst Scoring Pick</div><div class="value">${getFullName(worst[0])}</div><div class="detail">${formatScore(worst[1].score)} — in ${pickCounts[worst[0]]} entries</div></div>`;
-  html += `<div class="stat-card"><div class="label">Pool Spread</div><div class="value">${formatPrizeCompact(standings[0].totalPrize)} → ${formatPrizeCompact(standings[standings.length-1].totalPrize)}</div><div class="detail">1st place to last</div></div>`;
-  html += `<div class="stat-card"><div class="label">Total at Stake</div><div class="value">${formatPrizeCompact(standings.reduce((s,e) => s + e.totalPrize, 0))}</div><div class="detail">Combined across all 33 entries</div></div>`;
-  html += `</div>`;
 
+  // 1. Pool Leader
+  html += `<div class="stat-card"><div class="label">Pool Leader</div>`
+       +  `<div class="value">${leader.name}</div>`
+       +  `<div class="detail">${formatPrizeCompact(leader.totalPrize)} projected</div></div>`;
+
+  // 2. Gap to 2nd
+  if (second) {
+    // Entries are stored "Last, First" — split and take index 1 for the first name.
+    const leaderFirst = (leader.name.split(",")[1] || leader.name).trim();
+    const secondFirst = (second.name.split(",")[1] || second.name).trim();
+    html += `<div class="stat-card"><div class="label">Gap to 2nd</div>`
+         +  `<div class="value">${formatPrizeCompact(gapToSecond)}</div>`
+         +  `<div class="detail">${leaderFirst}'s lead over ${secondFirst}</div></div>`;
+  }
+
+  // 3. Biggest Mover
+  html += `<div class="stat-card"><div class="label">${moverCard.label}</div>`
+       +  `<div class="value">${moverCard.value}</div>`
+       +  `<div class="detail">${moverCard.detail}</div></div>`;
+
+  // 4. Biggest Drop
+  html += `<div class="stat-card"><div class="label">${dropCard.label}</div>`
+       +  `<div class="value">${dropCard.value}</div>`
+       +  `<div class="detail">${dropCard.detail}</div></div>`;
+
+  // 5. Cut Damage
+  html += `<div class="stat-card"><div class="label">Cut Damage</div>`
+       +  `<div class="value">${entriesHitByCut} of ${ENTRIES.length}</div>`
+       +  `<div class="detail">${cutPct}% of entries lost a pick to the cut</div></div>`;
+
+  // 6. Most Popular Pick
+  if (mostPicked.length) {
+    html += `<div class="stat-card"><div class="label">Most Popular Pick</div>`
+         +  `<div class="value">${getFullName(mostPicked[0][0])}</div>`
+         +  `<div class="detail">${mostPicked[0][1]} of ${ENTRIES.length} entries (${Math.round(mostPicked[0][1]/ENTRIES.length*100)}%)</div></div>`;
+  }
+
+  html += `</div>`;
   content.innerHTML = html;
 }
 
