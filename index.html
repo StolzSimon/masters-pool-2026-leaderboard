@@ -168,9 +168,10 @@
   </div>
 
   <div class="payout-note">
+    <div style="font-size:1.08em;line-height:1.5;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+      <strong>New:</strong> Now that the cut is set, standings are calculated by <strong>total prize money earned</strong> instead of strokes-to-par. Missed-cut picks get their $25K cut cheque and nothing more, so a single big finish from one of your players can swing things dramatically. Welcome to the real scoring.
+    </div>
     <strong>Just for fun — no guarantees.</strong> Official rankings and winners will come from Rob after the tournament wraps. Everything here is cobbled together from ESPN's live data, some questionable AI-assisted coding, and possibly one beer too many. Do your best not to take it too seriously. 🍺
-    <br><br>
-    <strong>New:</strong> Now that the cut is set, standings are calculated by <strong>total prize money earned</strong> instead of strokes-to-par. Missed-cut picks get their $25K cut cheque and nothing more, so a single big finish from one of your players can swing things dramatically. Welcome to the real scoring.
   </div>
 
   <div id="errorMsg" class="error-msg" style="display:none"></div>
@@ -944,6 +945,97 @@ async function fetchScores() {
     usingFallback = false;
     hideError();
     console.log(`✓ Fetched ${matchedCount} pool-pick scores + ${newLeaderboard.length} total players from ESPN`);
+
+    // =========================================================================
+    // PRIZE RECONCILIATION DEBUG DUMP
+    // =========================================================================
+    // Why this exists: there are two independent sources of prize-money data in
+    // this file. (1) FALLBACK_SCORES has hardcoded prizeMoney values that were
+    // manually computed on Friday night based on assumed tie groups, and those
+    // feed into the human-written recap narrative (e.g. "Debby is leading at
+    // $6.18M"). (2) computePositionsAndPrizes() recomputes prize money from
+    // scratch using the live ESPN field, handling tie groups and splits
+    // dynamically, and that feeds the standings table. When the two disagree
+    // (e.g. recap says $6.18M but table shows $6.07M for the same entry and
+    // R3 hasn't even started), the root cause is almost always a tie-group
+    // composition mismatch — ESPN has a different number of players at some
+    // tie than the fallback assumed, which changes the per-player split.
+    //
+    // This block prints two tables to the browser console:
+    //   1. Per-player: fallback prize vs. live-computed prize, with deltas
+    //      and tie-group size, so you can spot exactly which positions drifted.
+    //   2. Tie groups from the live ESPN field — how many players ESPN is
+    //      returning at each tied score, so you can see e.g. "T4 actually has
+    //      4 players, not 3" at a glance.
+    // Open DevTools → Console to see it after each successful fetch.
+    try {
+      console.group("%c🔍 Prize Reconciliation (fallback vs live)", "color:#006747;font-weight:bold");
+      const poolPicks = new Set();
+      for (const e of ENTRIES) { for (const p of e.picks) poolPicks.add(p); poolPicks.add(e.alt); }
+      const reconRows = [];
+      for (const sn of poolPicks) {
+        const fb = FALLBACK_SCORES[sn];
+        const live = newScores[sn];
+        if (!fb) continue;
+        const fbPrize = fb.prizeMoney || 0;
+        const livePrize = live ? (live.prizeMoney || 0) : fbPrize;
+        const delta = livePrize - fbPrize;
+        reconRows.push({
+          player: sn,
+          score: live ? live.score : fb.score,
+          fb_pos: fb.position,
+          live_pos: live ? live.position : "(no live data)",
+          fb_prize: "$" + fbPrize.toLocaleString(),
+          live_prize: "$" + livePrize.toLocaleString(),
+          delta: (delta >= 0 ? "+" : "") + "$" + delta.toLocaleString(),
+          drift: delta !== 0 ? "⚠️" : ""
+        });
+      }
+      reconRows.sort((a, b) => Math.abs(parseInt(b.delta.replace(/[^\-\d]/g, ""))) - Math.abs(parseInt(a.delta.replace(/[^\-\d]/g, ""))));
+      console.table(reconRows);
+
+      // Tie-group dump from the live field, so you can see exactly how many
+      // players ESPN has at each tied score.
+      const activeLive = liveField.filter(p => !p.missedCut && !p.notInField).slice().sort((a, b) => a.score - b.score);
+      const tieGroups = [];
+      let i = 0;
+      while (i < activeLive.length) {
+        let j = i;
+        while (j < activeLive.length && activeLive[j].score === activeLive[i].score) j++;
+        const size = j - i;
+        const startPos = i + 1;
+        const label = size > 1 ? `T${startPos}` : `${startPos}`;
+        const names = activeLive.slice(i, j).map(p => p.name).join(", ");
+        tieGroups.push({ position: label, score: activeLive[i].score, count: size, players: names });
+        i = j;
+      }
+      console.log("%cLive tie groups from ESPN field:", "font-weight:bold");
+      console.table(tieGroups);
+
+      // Pool-entry totals: what the recap said vs. what the live table will show.
+      // Computed here so we don't have to duplicate the standings calc logic.
+      const entryRows = ENTRIES.map(e => {
+        let fbTotal = 0, liveTotal = 0;
+        for (const p of e.picks) {
+          fbTotal += (FALLBACK_SCORES[p]?.prizeMoney || 0);
+          liveTotal += ((newScores[p]?.prizeMoney) ?? (FALLBACK_SCORES[p]?.prizeMoney || 0));
+        }
+        const delta = liveTotal - fbTotal;
+        return {
+          entry: e.name,
+          fb_total: "$" + (fbTotal / 1e6).toFixed(2) + "M",
+          live_total: "$" + (liveTotal / 1e6).toFixed(2) + "M",
+          delta: (delta >= 0 ? "+" : "") + "$" + Math.round(delta / 1000) + "K"
+        };
+      });
+      entryRows.sort((a, b) => parseFloat(b.live_total.replace(/[^\d.]/g, "")) - parseFloat(a.live_total.replace(/[^\d.]/g, "")));
+      console.log("%cPool-entry totals (primaries only, no alt):", "font-weight:bold");
+      console.table(entryRows);
+      console.groupEnd();
+    } catch (debugErr) {
+      console.warn("Prize reconciliation debug dump failed:", debugErr);
+    }
+
     return true;
   } catch (err) {
     console.error("Parse error:", err);
