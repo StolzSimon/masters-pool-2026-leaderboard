@@ -584,10 +584,44 @@ function formatPrizeFull(amount) {
   return "$" + amount.toLocaleString("en-US");
 }
 
-// ── Baseline ranks (end of Saturday / Round 3) ──
+// ── Previous day's scores (for movement indicators) ──
+// This is the end-of-day data from the PRIOR round, used solely to compute
+// BASELINE_RANKS for the ▲/▼ movement indicators. It is separate from
+// FALLBACK_SCORES (which is the CURRENT day's snapshot used when ESPN is
+// unreachable). When updating for a new day: copy today's FALLBACK_SCORES
+// into PREV_DAY_SCORES, then update FALLBACK_SCORES with the new day's data.
+const PREV_DAY_SCORES = {
+  // End of Round 2 (Friday April 10, 2026)
+  "Aberg":     { prizeMoney: 174094  },
+  "Bhatia":    { prizeMoney:  25000  },
+  "Conners":   { prizeMoney:  57938  },
+  "DeChambeau":{ prizeMoney:  25000  },
+  "Fitzpatrick":{prizeMoney: 262125  },
+  "Fleetwood": { prizeMoney: 930000  },
+  "Gotterup":  { prizeMoney: 435000  },
+  "Hojgaard":  { prizeMoney:  25000  },
+  "Hovland":   { prizeMoney:  90000  },
+  "Kim":       { prizeMoney:  57938  },
+  "Koepka":    { prizeMoney: 435000  },
+  "Lee":       { prizeMoney:  25000  },
+  "MacIntyre": { prizeMoney:  25000  },
+  "Matsuyama": { prizeMoney: 348750  },
+  "McIlroy":   { prizeMoney: 4500000 },
+  "Morikawa":  { prizeMoney: 262125  },
+  "Rahm":      { prizeMoney:  57938  },
+  "Reed":      { prizeMoney: 1980000 },
+  "Rose":      { prizeMoney: 930000  },
+  "Schauffele":{ prizeMoney: 348750  },
+  "Scheffler": { prizeMoney: 174094  },
+  "Young":     { prizeMoney: 631875  },
+  "Zalatoris": { prizeMoney: 0       }
+};
+const BASELINE_LABEL = "Friday"; // Shown in tooltips and snapshot cards
+
+// ── Baseline ranks (end of previous day) ──
 // Used to show per-entry movement indicators (▲/▼) in the live standings.
-// We compute the rank each entry held at the end of Round 3 using the hardcoded
-// FALLBACK_SCORES, then compare against the live rank on each render. The
+// We compute the rank each entry held at end of the prior day using
+// PREV_DAY_SCORES, then compare against the current rank on each render. The
 // sorting logic here MUST match the main standings sort (totalPrize DESC, then
 // altPrize DESC) or the deltas will be misleading.
 function computeRanksFromScores(scores) {
@@ -612,7 +646,7 @@ function computeRanksFromScores(scores) {
   });
   return ranks;
 }
-const BASELINE_RANKS = computeRanksFromScores(FALLBACK_SCORES);
+const BASELINE_RANKS = computeRanksFromScores(PREV_DAY_SCORES);
 
 let playerScores = { ...FALLBACK_SCORES }; // Start with fallback so page renders immediately
 let tournamentStatus = "unknown";
@@ -1683,16 +1717,15 @@ function renderStandings() {
     html += `<tr data-entry="${entryId}" data-picks="${picksAttr}" data-alt="${altAttr}" class="${isFav ? 'favorited' : ''}">`;
     html += `<td class="rank ${rankClass}">${entry.rankDisplay}</td>`;
 
-    // Movement indicator vs end of Saturday (Round 3) baseline. Only show when
-    // live data is actually in play — if we're still on the fallback, current
-    // == baseline by construction and the "—" for every row is just noise.
+    // Movement indicator vs end of previous day. Compares current rank
+    // against BASELINE_RANKS (computed from PREV_DAY_SCORES).
     const baselineRank = BASELINE_RANKS[entry.name];
     let moveHtml = "";
-    if (!usingFallback && baselineRank != null) {
+    if (baselineRank != null) {
       const delta = baselineRank - entry.rank; // positive = moved up
-      if (delta > 0)      moveHtml = `<span class="move move-up" title="Up ${delta} from end of Saturday">▲${delta}</span>`;
-      else if (delta < 0) moveHtml = `<span class="move move-down" title="Down ${-delta} from end of Saturday">▼${-delta}</span>`;
-      else                moveHtml = `<span class="move move-flat" title="No change from end of Saturday">–</span>`;
+      if (delta > 0)      moveHtml = `<span class="move move-up" title="Up ${delta} from end of ${BASELINE_LABEL}">▲${delta}</span>`;
+      else if (delta < 0) moveHtml = `<span class="move move-down" title="Down ${-delta} from end of ${BASELINE_LABEL}">▼${-delta}</span>`;
+      else                moveHtml = `<span class="move move-flat" title="No change from end of ${BASELINE_LABEL}">–</span>`;
     }
     html += `<td class="name">${entry.name}${moveHtml}</td>`;
 
@@ -1800,10 +1833,7 @@ function renderAnalysis(standings) {
   // Only meaningful once live data has landed; while we're on the fallback,
   // current == baseline by construction so we show placeholders instead.
   let moverCard, dropCard;
-  if (usingFallback) {
-    moverCard = { label: "Biggest Mover", value: "—", detail: "Awaiting live data" };
-    dropCard  = { label: "Biggest Drop",  value: "—", detail: "Awaiting live data" };
-  } else {
+  {
     // Compute deltas for every entry that has a baseline rank.
     const withDelta = standings
       .filter(e => BASELINE_RANKS[e.name] != null)
@@ -1812,12 +1842,6 @@ function renderAnalysis(standings) {
     const maxDelta = withDelta.reduce((m, x) => Math.max(m, x.delta), -Infinity);
     const minDelta = withDelta.reduce((m, x) => Math.min(m, x.delta),  Infinity);
 
-    // Helper: render a card for a group of tied entries. Picks first names
-    // from the "Last, First" format and joins them per the formatting rules:
-    //   1 name  → "Debby"
-    //   2 names → "Debby & Cody"
-    //   3 names → "Debby, Cody & Mike"
-    //   4+      → "Debby, Cody +N more"
     const firstNameOf = name => (name.split(",")[1] || name).trim();
     const formatNames = names => {
       if (names.length === 1) return names[0];
@@ -1830,8 +1854,8 @@ function renderAnalysis(standings) {
       const names = group.map(g => firstNameOf(g.entry.name));
       const value = formatNames(names);
       const detail = group.length === 1
-        ? `${deltaLabel} vs end of Saturday`
-        : `${group.length} entries tied — ${deltaLabel} vs end of Saturday`;
+        ? `${deltaLabel} vs end of ${BASELINE_LABEL}`
+        : `${group.length} entries tied — ${deltaLabel} vs end of ${BASELINE_LABEL}`;
       return { label, value, detail };
     };
 
@@ -1841,12 +1865,12 @@ function renderAnalysis(standings) {
     moverCard = buildCard(
       "Biggest Mover", moversGroup,
       moversGroup.length ? `▲${maxDelta}` : "",
-      "No movement yet", "vs end of Saturday"
+      "No movement yet", `vs end of ${BASELINE_LABEL}`
     );
     dropCard = buildCard(
       "Biggest Drop", dropsGroup,
       dropsGroup.length ? `▼${-minDelta}` : "",
-      "No drops yet", "vs end of Saturday"
+      "No drops yet", `vs end of ${BASELINE_LABEL}`
     );
   }
 
