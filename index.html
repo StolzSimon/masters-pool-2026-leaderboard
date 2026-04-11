@@ -37,6 +37,10 @@
   .rank-2,.rank-3{color:var(--green-dark)}
   .name{font-weight:600;font-size:.9rem;max-width:96px;white-space:normal;word-wrap:break-word;line-height:1.2}
   @media(min-width:601px){.name{max-width:120px}}
+  .move{display:inline-block;margin-left:5px;font-size:.7rem;font-weight:700;letter-spacing:-.3px;vertical-align:middle;white-space:nowrap}
+  .move-up{color:#0a8a5e}
+  .move-down{color:#c0392b}
+  .move-flat{color:#b0a894;font-weight:600}
   .pick{font-size:.78rem;text-align:center;padding:6px 4px;line-height:1.2}
   .pick .pick-line1{line-height:1.15;display:block}
   .pick .pos-label{font-weight:400;color:var(--muted);font-size:.68rem;margin-right:2px;font-variant-numeric:tabular-nums}
@@ -543,6 +547,36 @@ function formatPrizeFull(amount) {
   if (amount === 0) return "—";
   return "$" + amount.toLocaleString("en-US");
 }
+
+// ── Baseline ranks (end of Friday / Round 2) ──
+// Used to show per-entry movement indicators (▲/▼) in the live standings.
+// We compute the rank each entry held at the end of Round 2 using the hardcoded
+// FALLBACK_SCORES, then compare against the live rank on each render. The
+// sorting logic here MUST match the main standings sort (totalPrize DESC, then
+// altPrize DESC) or the deltas will be misleading.
+function computeRanksFromScores(scores) {
+  const rows = ENTRIES.map(entry => {
+    let totalPrize = 0;
+    for (const p of entry.picks) totalPrize += (scores[p]?.prizeMoney || 0);
+    const altPrize = scores[entry.alt]?.prizeMoney || 0;
+    return { name: entry.name, totalPrize, altPrize };
+  });
+  rows.sort((a, b) => {
+    if (a.totalPrize !== b.totalPrize) return b.totalPrize - a.totalPrize;
+    return b.altPrize - a.altPrize;
+  });
+  const ranks = {};
+  rows.forEach((r, idx) => {
+    const prev = idx > 0 ? rows[idx - 1] : null;
+    if (prev && prev.totalPrize === r.totalPrize && prev.altPrize === r.altPrize) {
+      ranks[r.name] = ranks[prev.name];
+    } else {
+      ranks[r.name] = idx + 1;
+    }
+  });
+  return ranks;
+}
+const BASELINE_RANKS = computeRanksFromScores(FALLBACK_SCORES);
 
 let playerScores = { ...FALLBACK_SCORES }; // Start with fallback so page renders immediately
 let tournamentStatus = "unknown";
@@ -1195,7 +1229,7 @@ function showError(msg) {
   fullLeaderboard = [...FALLBACK_LEADERBOARD]; // Reset leaderboard too
   const el = document.getElementById("errorMsg");
   el.style.display = "block";
-  el.innerHTML = `<strong>Live scores from ESPN unavailable</strong><span class="sub">Showing fallback data from end of Day 1 (Thursday). Will retry every 5 minutes.</span>`;
+  el.innerHTML = `<strong>Live scores from ESPN unavailable</strong><span class="sub">Showing fallback data from end of Day 2 (Friday, after the cut). Will retry every 5 minutes.</span>`;
 }
 
 function hideError() {
@@ -1610,7 +1644,19 @@ function renderStandings() {
 
     html += `<tr data-entry="${entryId}" data-picks="${picksAttr}" data-alt="${altAttr}" class="${isFav ? 'favorited' : ''}">`;
     html += `<td class="rank ${rankClass}">${entry.rankDisplay}</td>`;
-    html += `<td class="name">${entry.name}</td>`;
+
+    // Movement indicator vs end of Friday (Round 2) baseline. Only show when
+    // live data is actually in play — if we're still on the fallback, current
+    // == baseline by construction and the "—" for every row is just noise.
+    const baselineRank = BASELINE_RANKS[entry.name];
+    let moveHtml = "";
+    if (!usingFallback && baselineRank != null) {
+      const delta = baselineRank - entry.rank; // positive = moved up
+      if (delta > 0)      moveHtml = `<span class="move move-up" title="Up ${delta} from end of Friday">▲${delta}</span>`;
+      else if (delta < 0) moveHtml = `<span class="move move-down" title="Down ${-delta} from end of Friday">▼${-delta}</span>`;
+      else                moveHtml = `<span class="move move-flat" title="No change from end of Friday">–</span>`;
+    }
+    html += `<td class="name">${entry.name}${moveHtml}</td>`;
 
     // Total = combined prize money for all 4 primary picks
     html += `<td class="total prize-total">${formatPrizeCompact(entry.totalPrize)}</td>`;
