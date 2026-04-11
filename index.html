@@ -229,7 +229,7 @@
 
   <div class="instructions">
     <span style="font-size:1.3rem">⭐</span>
-    <span><strong>Tap any row to mark it as your favorite</strong> — useful for tracking your own entry. Tap again to unmark. <em>Or tap a player in the Top 10 above to see who picked them.</em></span>
+    <span><strong>Tap any row to mark it as your favorite</strong> — useful for tracking your own entry. Tap again to unmark. <em>Or tap one or more players in the leaderboard above to see who has them all.</em></span>
   </div>
 
   <div id="selectionBanner" class="selection-banner" style="display:none"></div>
@@ -301,7 +301,7 @@
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 49 &bull; Built with Claude</span>
+    <span class="version">App version 50 &bull; Built with Claude</span>
   </div>
 
   <!-- Prize reconciliation panel (debug tool) — populated by loadLiveScores.
@@ -547,7 +547,7 @@ let tournamentRound = "";
 let usingFallback = true; // Will flip to false on successful API fetch
 let liveState = "UNKNOWN"; // LIVE | ROUND_COMPLETE | TOURNAMENT_COMPLETE | ROUND_PENDING | PRE_TOURNAMENT | UNKNOWN
 let currentRoundNum = 1;
-let selectedPlayerShortName = null; // short name of the top-10 player currently highlighted in standings, or null
+let selectedPlayers = new Set(); // short names of players selected in the top-N leaderboard. Multi-select: tap to add, tap again to remove. Standings filter to entries containing ALL selected players.
 let leaderboardExpanded = false; // whether the Masters leaderboard at top is showing top 10 (false) or top 20 (true)
 
 // ── Calendar-based tournament schedule ──
@@ -1283,7 +1283,7 @@ function renderLeaderboard() {
     // this player" note in the selection banner instead of highlighting rows.
     const shortName = matchPlayer(p.name);
     const selectionKey = shortName || p.name; // full name falls back as the key
-    const isSelected = selectionKey === selectedPlayerShortName;
+    const isSelected = selectedPlayers.has(selectionKey);
 
     const rowCls = "lb-row"
       + (isPlaying ? " is-live" : "")
@@ -1313,7 +1313,8 @@ function renderLeaderboard() {
   container.querySelectorAll(".lb-row.selectable").forEach(row => {
     row.addEventListener("click", () => {
       const key = row.dataset.short;
-      selectPlayer(selectedPlayerShortName === key ? null : key);
+      // Toggle: if already selected, remove; otherwise add. Multi-select.
+      togglePlayer(key);
     });
   });
 
@@ -1368,30 +1369,44 @@ function renderStatusChip(state, thru, missedCut, notInField) {
   return "";
 }
 
-// ── Top-10 → standings selection/highlight ──
-// Tapping a player in the Top 10 filters the standings below: rows that
-// include the selected player (as a primary pick or alternate) are
-// highlighted, others are dimmed. Tap again to clear.
-function selectPlayer(shortName) {
-  selectedPlayerShortName = shortName;
+// ── Top-N → standings selection/highlight (MULTI-SELECT) ──
+// Tapping a player in the top leaderboard adds them to the selection set;
+// tapping again removes them. The standings table filters to entries that
+// contain ALL of the currently-selected players (as primary or alt). Use the
+// "Clear" button in the banner to reset the selection.
+function togglePlayer(shortName) {
+  if (!shortName) return;
+  if (selectedPlayers.has(shortName)) {
+    selectedPlayers.delete(shortName);
+  } else {
+    selectedPlayers.add(shortName);
+  }
+  syncTopRowSelectionState();
+  applyPlayerSelection();
+  updateSelectionBanner();
+}
 
-  // Update selected state on top-10 rows
+function clearPlayerSelection() {
+  selectedPlayers.clear();
+  syncTopRowSelectionState();
+  applyPlayerSelection();
+  updateSelectionBanner();
+}
+
+// Reflect the selection set as .selected classes on the top leaderboard rows.
+function syncTopRowSelectionState() {
   document.querySelectorAll("#topPlayers .lb-row").forEach(row => {
-    if (shortName && row.dataset.short === shortName) {
+    if (selectedPlayers.has(row.dataset.short)) {
       row.classList.add("selected");
     } else {
       row.classList.remove("selected");
     }
   });
-
-  applyPlayerSelection();
-  updateSelectionBanner();
 }
 
 function applyPlayerSelection() {
   const tbody = document.getElementById("standings");
   if (!tbody) return;
-  const sn = selectedPlayerShortName;
 
   // Clear previous state
   tbody.querySelectorAll("tr").forEach(r => {
@@ -1399,24 +1414,31 @@ function applyPlayerSelection() {
   });
   tbody.querySelectorAll("td.pick-match").forEach(c => c.classList.remove("pick-match"));
 
-  if (!sn) return;
+  if (selectedPlayers.size === 0) return;
 
-  // First pass: figure out if anyone picked this player
+  // Find rows that contain ALL selected players (as primary or alt). An entry
+  // "has" a player if their short name is in the picks list OR matches the alt.
   const rows = Array.from(tbody.querySelectorAll("tr"));
   const matchingRows = rows.filter(row => {
     const picks = (row.dataset.picks || "").split(",");
     const alt = row.dataset.alt || "";
-    return picks.includes(sn) || alt === sn;
+    const has = sn => picks.includes(sn) || alt === sn;
+    for (const sn of selectedPlayers) {
+      if (!has(sn)) return false;
+    }
+    return true;
   });
 
-  // If nobody picked this player, don't dim anything — the banner explains why
+  // If nobody matches, leave the table un-dimmed and let the banner explain.
   if (matchingRows.length === 0) return;
 
-  // Otherwise highlight matches, dim the rest
+  // Highlight matches, dim the rest, and mark each matching pick cell.
   rows.forEach(row => {
     if (matchingRows.includes(row)) {
       row.classList.add("sel-match");
-      row.querySelectorAll(`td[data-pick="${CSS.escape(sn)}"]`).forEach(c => c.classList.add("pick-match"));
+      for (const sn of selectedPlayers) {
+        row.querySelectorAll(`td[data-pick="${CSS.escape(sn)}"]`).forEach(c => c.classList.add("pick-match"));
+      }
     } else {
       row.classList.add("sel-dim");
     }
@@ -1426,45 +1448,56 @@ function applyPlayerSelection() {
 function updateSelectionBanner() {
   const banner = document.getElementById("selectionBanner");
   if (!banner) return;
-  const sn = selectedPlayerShortName;
-  if (!sn) {
+  if (selectedPlayers.size === 0) {
     banner.style.display = "none";
     banner.innerHTML = "";
     banner.classList.remove("empty");
     return;
   }
 
-  // Count matches directly from row data (not DOM classes, which may not be
-  // applied yet in the zero-match case)
+  // Resolve display names for each selected player. Prefer the full name from
+  // the top-leaderboard row's data-full attr if available; fall back to map.
+  const displayNames = [];
+  for (const sn of selectedPlayers) {
+    const topRow = document.querySelector(`#topPlayers .lb-row[data-short="${CSS.escape(sn)}"]`);
+    displayNames.push(topRow?.dataset?.full || getFullName(sn));
+  }
+  const namesHtml = displayNames.map(n => `<strong>${n}</strong>`).join(" + ");
+
+  // Count rows that match ALL selected players
   const tbody = document.getElementById("standings");
   let matchCount = 0;
   if (tbody) {
     tbody.querySelectorAll("tr").forEach(row => {
       const picks = (row.dataset.picks || "").split(",");
       const alt = row.dataset.alt || "";
-      if (picks.includes(sn) || alt === sn) matchCount++;
+      const has = sn => picks.includes(sn) || alt === sn;
+      let allMatch = true;
+      for (const sn of selectedPlayers) {
+        if (!has(sn)) { allMatch = false; break; }
+      }
+      if (allMatch) matchCount++;
     });
   }
-
-  // Prefer the full display name if the top-10 row stored one
-  const topRow = document.querySelector(`#topPlayers .lb-row[data-short="${CSS.escape(sn)}"]`);
-  const displayName = topRow?.dataset?.full || getFullName(sn);
 
   banner.style.display = "flex";
   if (matchCount === 0) {
     banner.classList.add("empty");
+    const verb = selectedPlayers.size === 1 ? "picked" : "has all of";
     banner.innerHTML = `
-      <span class="sel-label">🤷 Nobody in the pool picked <strong>${displayName}</strong></span>
+      <span class="sel-label">🤷 Nobody in the pool ${verb} ${namesHtml}</span>
       <button class="sel-clear" type="button">Clear ✕</button>
     `;
   } else {
     banner.classList.remove("empty");
+    const entryWord = matchCount === 1 ? "entry" : "entries";
+    const withWord = selectedPlayers.size === 1 ? "with" : "with all of";
     banner.innerHTML = `
-      <span class="sel-label">Showing ${matchCount} ${matchCount === 1 ? "entry" : "entries"} with <strong>${displayName}</strong></span>
+      <span class="sel-label">Showing ${matchCount} ${entryWord} ${withWord} ${namesHtml}</span>
       <button class="sel-clear" type="button">Clear ✕</button>
     `;
   }
-  banner.querySelector(".sel-clear").addEventListener("click", () => selectPlayer(null));
+  banner.querySelector(".sel-clear").addEventListener("click", clearPlayerSelection);
 }
 
 function renderStandings() {
