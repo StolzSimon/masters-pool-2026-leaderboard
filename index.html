@@ -236,7 +236,7 @@
     <span class="tag" id="refreshTag">Auto-refreshes every 5 min</span>
   </div>
 
-  <div class="welcome-banner">
+  <div class="welcome-banner" id="welcomeBanner">
     <h2>Six shots. Gone. Tomorrow decides everything. 🌲</h2>
     <p>McIlroy's historic lead evaporated on Moving Day — he and Cameron Young are locked at -11 heading into Sunday's final round. Scheffler's bogey-free 65 has him lurking four back, and the pool standings have been reshuffled top to bottom. One final round, 18 holes, and <strong>$4.5M for the winner</strong> vs $2.43M for solo second. That gap alone can flip the entire pool. May your picks find the fairway and your heart survive Amen Corner. ⛳</p>
   </div>
@@ -1979,6 +1979,27 @@ async function refresh() {
 }
 
 // ── Init ──
+
+// Dynamic welcome banner — swaps text based on the current day at Augusta.
+// Saturday's text is in the HTML by default; Sunday's replaces it past midnight ET.
+const BANNER_TEXT = {
+  "2026-04-12": {
+    heading: "Final round. Two at the top. One green jacket. 🌲",
+    body: `Young and McIlroy are locked at -11 with 18 holes to go. Scheffler is four back after a bogey-free 65 and won't go quietly. The winner takes home <strong>$4.5M</strong> — solo second gets $2.43M — and that <strong>$2.07M gap</strong> is enough to flip the entire pool standings in a single afternoon. Buckle up. ⛳`
+  }
+};
+(function updateBanner() {
+  const today = getAugustaDateKey();
+  const override = BANNER_TEXT[today];
+  if (override) {
+    const banner = document.getElementById("welcomeBanner");
+    if (banner) {
+      banner.querySelector("h2").textContent = override.heading;
+      banner.querySelector("p").innerHTML = override.body;
+    }
+  }
+})();
+
 refresh();
 setInterval(refresh, 5 * 60 * 1000); // Refresh every 5 minutes
 
