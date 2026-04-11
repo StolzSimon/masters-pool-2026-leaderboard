@@ -43,7 +43,18 @@
   .status-chip.chip-live{background:rgba(220,53,69,.12);color:#c62233;animation:chipPulse 1.8s ease-in-out infinite}
   .status-chip.chip-final{background:rgba(40,120,60,.12);color:#286e3e}
   .status-chip.chip-pre{background:rgba(0,0,0,.06);color:var(--muted)}
+  .status-chip.chip-mc{background:#5a5a5a;color:#fff;letter-spacing:.5px}
   @keyframes chipPulse{0%,100%{opacity:1}50%{opacity:.55}}
+
+  /* Missed-cut treatment on the pick cell: dim the player name and strike the score */
+  .pick.is-mc .player-name,.alternate.is-mc .player-name{color:#9a9a9a;text-decoration:line-through;text-decoration-color:#bbb}
+  .pick.is-mc .score,.alternate.is-mc .score{color:#9a9a9a!important;text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:#9a9a9a}
+
+  /* Active picks count column (e.g. "3/4") */
+  .active-count{font-size:.85rem;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;color:var(--dark)}
+  .active-count.active-full{color:var(--good)}
+  .active-count.active-mid{color:#c08000}
+  .active-count.active-low{color:var(--red)}
   .score.under{color:var(--good)}
   .score.over{color:var(--red)}
   .score.even{color:var(--dark)}
@@ -160,6 +171,7 @@
           <th class="center">#</th>
           <th>Entry</th>
           <th class="center">Total</th>
+          <th class="center">Active</th>
           <th class="center">Pick 1</th>
           <th class="center">Pick 2</th>
           <th class="center">Pick 3</th>
@@ -168,7 +180,7 @@
         </tr>
       </thead>
       <tbody id="standings">
-        <tr><td colspan="8" class="loading"><div class="spinner"></div><br>Loading standings...</td></tr>
+        <tr><td colspan="9" class="loading"><div class="spinner"></div><br>Loading standings...</td></tr>
       </tbody>
     </table>
   </div>
@@ -189,35 +201,39 @@
   </div>
 
   <div class="commentary recap">
-    <h3>📖 Day 1 Recap — Thursday, April 9</h3>
-    <p>Round 1 is in the books, and the leaderboard didn't quite play to script. Most of the elite favorites went out and shot under par — but the two biggest LIV names laid eggs, completely flipping the pool standings from what most entries were hoping for.</p>
+    <h3>📖 Day 2 Recap — Friday, April 10</h3>
+    <p>The Masters has a runaway leader. Rory McIlroy fired a bogey-free 65 — capped by four straight birdies to close — and now sits at 12-under, six shots clear of the field. It's the <strong>largest 36-hole lead in Masters history</strong>. He's chasing back-to-back green jackets, which only Nicklaus, Faldo, and Tiger have ever pulled off. Behind him, Day 2 was a meat grinder: the cut landed at +4, and one of the pre-tournament co-favorites just walked off Augusta in disbelief.</p>
 
     <h4 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--green-dark);margin-top:14px;margin-bottom:6px">🟢 Heroes of the Day</h4>
-    <p><strong>Rory McIlroy (-5, 67)</strong> — The defending champion couldn't have asked for a better opening to his title defense. It's his first sub-70 Thursday at Augusta since 2018, and a massive improvement on last year when he was 7 shots back after Day 1. Notably, this is also the first time since 2011 he's led overnight at Augusta — a tournament he'd rather forget. He's the engine of every entry that picked him.</p>
-    <p><strong>Patrick Reed (-3, 69)</strong> — The biggest value pick of the pool delivered. Reed opened birdie-eagle to become just the sixth player in Masters history to start a tournament that way, then added another eagle on the par-5 8th to turn in 31. Two bogeys on the back kept him from a truly historic round, but he sits T3 — and only 2 entries had him as a primary pick (Mike Scarr and Simon Stolz). Four others held him as their alternate.</p>
-    <p><strong>Justin Rose (-2, 70)</strong> — Reached -4 twice during his round before a bogey-bogey finish dropped him to -2. Still good for a top-10 finish — his 9th in 21 Masters starts (only Jack Nicklaus has more).</p>
-    <p><strong>Scottie Scheffler (-2, 70)</strong> — Eagled the par-5 second and birdied the third to quickly reach -3, then went 14 pars and a bogey the rest of the way. Hit 12 of 14 fairways — his best driving accuracy in 25 rounds. The ball-striking is back.</p>
-    <p><strong>Tommy Fleetwood (-1, 71)</strong> — Quietly steady. Was at -3 through 11 before bogeying his final hole to finish with five birdies against four bogeys.</p>
+    <p><strong>Rory McIlroy (-12, 65)</strong> — Pure domination. After a slow middle stretch where Patrick Reed briefly pulled even, Rory closed birdie-birdie-birdie-birdie to break the tournament wide open. Six shots clear at the halfway mark — three shots better than any defending champion in Masters history at this point. The pool's most-picked primary is now the engine of nearly every contender in the standings.</p>
+    <p><strong>Patrick Reed (-6, 67)</strong> — The biggest pre-tournament value pick keeps delivering. Reed actually pulled even with Rory through 12 before the leader's closing birdie barrage. He's solo T2 with Sam Burns, four shots clear of everyone else not named McIlroy. Mike Scarr and Simon Stolz remain the only two entries who picked Reed as a primary — though their fortunes diverge sharply (more on that below).</p>
+    <p><strong>Tommy Fleetwood (-5, 68)</strong> — <em>Two eagles in one round.</em> Fleetwood eagled the par-5 8th and then dropped the eagle putt on 15 to vault into a tie for fourth alongside Justin Rose and Shane Lowry. Quiet Thursday, statement Friday.</p>
+    <p><strong>Tyrrell Hatton (66)</strong> — Hit <strong>all 18 greens in regulation</strong>, becoming just the third player in the last 30 years to do so at Augusta (Furyk in '09, Na in '20). Not a pool pick anywhere, but a feat worth flagging.</p>
+    <p><strong>Brooks Koepka (69)</strong> — Switched his driver setting from A1 to B1 between rounds and suddenly looks like Major Brooks again. Five-time major winner is firmly in the mix.</p>
 
     <h4 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--green-dark);margin-top:14px;margin-bottom:6px">🔴 Disasters of the Day</h4>
-    <p><strong>Jon Rahm (+6, 78)</strong> — Catastrophic. The 2023 champion failed to make a single birdie all day, with four bogeys on the front and a double on the back. He'll need a herculean Friday just to make the cut. This single result is the biggest drag on the pool — 13 entries have him.</p>
-    <p><strong>Bryson DeChambeau (+4, 76)</strong> — A triple bogey on 11 (three shots to escape a bunker) derailed what was an otherwise manageable round. He bogeyed two of his last three holes and is also fighting for the cut. His own lucky bounce off a patron on the par-3 6th saved par; nothing else went his way.</p>
-    <p><strong>Robert MacIntyre (+8, 80)</strong> — Carded a 9 on the par-5 15th after going in the water. The Scotsman flipped off the hole from the fairway in frustration — possibly the most relatable moment of the day.</p>
-    <p><strong>Ludvig Åberg (+3, 75)</strong> — Started on fire with three birdies in his first six holes, then completely unraveled with a double on 9, bogey-bogey on 10–11, and another double on 13. Finished T49. The most popular pick in the pool (19 entries) became one of its biggest drags.</p>
+    <p><strong>Bryson DeChambeau — MISSED CUT.</strong> Devastating. After clawing back from his Round 1 mess with a birdie at 15 to reach +3 (inside the cut), Bryson stepped to the 18th tee needing only a bogey to play the weekend. He launched his drive into the woods, and walked off with a triple-bogey 7. Final: +5, just outside the cut. For pool entries with Bryson as a primary, his contribution is now frozen at his 36-hole score — no more improvement possible.</p>
+    <p><strong>Jon Rahm — Made the cut on the number.</strong> Mixed news. After Thursday's catastrophic 78, Rahm shot 70 and birdied the 16th to land exactly on +4. He plays the weekend, but he's 16 shots back and effectively out of contention for the green jacket. The 13 entries with Rahm get to keep him, but only as deadweight.</p>
+    <p><strong>Scottie Scheffler (74)</strong> — The world No. 1's quest for a third green jacket in five years is in serious trouble. Scheffler couldn't find anything on Friday and now sits well off the lead. Multiple long-running streaks (consecutive rounds at par or better, top-10 finishes at Augusta) all snapped or in jeopardy.</p>
+    <p><strong>Akshay Bhatia — Heartbreak cut.</strong> Hit a gorgeous bunker shot at 17 to nearly hole out, then double-bogeyed 18 to fall to the wrong side of the line. Brutal.</p>
 
     <h4 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--green-dark);margin-top:14px;margin-bottom:6px">🎯 The Pool Story</h4>
-    <p><strong>Cody Pantages took the early lead at -11</strong>, riding the perfect storm of McIlroy, Rose, Schauffele, and Scheffler. None of his picks blew up. He's the only entry with all four picks under par after Round 1.</p>
-    <p><strong>Mike Scarr sits 2nd at -9</strong> on the strength of being one of only two entries to pick Patrick Reed as a primary (the other being Simon Stolz). Combined with Rose, Schauffele, and Scheffler, the Reed call gives Mike a unique edge over the rest of the Scarr clan, who mostly stacked the chalk favorites.</p>
-    <p><strong>The Scarr family — Matt and Ryan — tied for 3rd at -6</strong> with the same four picks (Aberg, McIlroy, Schauffele, Scheffler) — would have been better with anyone other than Aberg in their lineup, but McIlroy is doing the heavy lifting.</p>
-    <p><strong>The bottom of the standings is dominated by entries that doubled up on the LIV pair.</strong> Anyone who picked both Rahm and DeChambeau is +10 from those two picks alone, which is nearly impossible to recover from. Five entries are in this trap.</p>
-    <p style="margin-top:10px;font-size:.82rem;color:var(--muted);font-style:italic">Remember: last year's champion (McIlroy) was 7 shots back after Round 1 and still won. With 54 holes remaining, any entry within 10 shots of the lead has a real shot.</p>
+    <p><strong>Debby Chan is leading the pool at -22</strong> with the dream lineup: Aberg + Fleetwood + McIlroy + Rose. Three of her four picks are inside the top 6 on the actual Masters leaderboard, and Aberg quietly making the cut at even par means none of her picks blew up. She's the only entry combining McIlroy, Fleetwood, AND Rose, and her three-shot lead over the field is the kind of margin that's hard to give back.</p>
+    <p><strong>Cody Pantages sits 2nd at -19</strong> with McIlroy + Rose + Schauffele + Scheffler. Schauffele only finished at -2 after bogeying Amen Corner (11–12–13), and Scheffler had the worst day of any picked player who made the cut (E). Two underperforming picks are the reason he's three back of Debby instead of pressuring her at the top.</p>
+    <p><strong>Larry Armstrong is solo 3rd at -16</strong>: Aberg + McIlroy + Scheffler + Young. Cameron Young at -4 is the surprise contributor here — quietly one of the better-performing picks in the pool that nobody talks about.</p>
+    <p><strong>Ryan Scarr and Matt Scarr are tied at 4th-5th, both at -14</strong>, with the same primary picks (Aberg + McIlroy + Schauffele + Scheffler). Their alternates split them — Ryan has Matsuyama (-2) vs Matt's Rahm (+4) — which would matter if anyone overtook them and forced a tiebreaker.</p>
+    <p><strong>Mike Scarr is solo 6th at -13</strong> — the only top-tier entry without McIlroy, riding his Reed (-6) primary pick. Reed + Rose + Schauffele + Scheffler is the contrarian lineup nobody else thought to build, and it's the only way to be this high without the runaway leader on your card.</p>
+    <p><strong>Rob Forbes has the cruelest entry in the pool at 7th, -11.</strong> His primaries are Aberg + Fleetwood + Schauffele + Young — all four still alive, no MCs — but he made the fatal choice of picking <em>McIlroy as his alternate</em>. The alt only counts as a tiebreaker. Had he swapped any primary for McIlroy, he'd be challenging Debby for first place.</p>
+    <p><strong>Colin Ball is the day's biggest casualty</strong>, sitting dead last at +12 with only <strong>2/4 active picks</strong>. He's the only entry in the pool who picked BOTH Bhatia AND MacIntyre as primaries — both missed the cut. His other two picks (Conners +4, Fleetwood -5) can't possibly dig him out.</p>
+    <p><strong>The cut also took 16 entries down to 3/4 active or worse.</strong> Bryson DeChambeau MC'd 13 entries (each frozen at +5). Bhatia and MacIntyre each took out their lone picker (Colin Ball got both). And Nicolai Højgaard's MC dropped Elaine Reynolds from 4/4 to 3/4 — a quiet but real hit, since her remaining lineup (Aberg + McIlroy + Scheffler) was otherwise solid. Aberg quietly making the cut at even par rescued the 19 entries who took him as the most-popular pre-tournament pick. Watch the new "Active" column on Saturday — it's the cleanest signal of who's still in this.</p>
+    <p style="margin-top:10px;font-size:.82rem;color:var(--muted);font-style:italic">Remember: this pool pays by total prize money earned, not strokes. Debby's three-shot pool lead is built on McIlroy's six-shot tournament lead — if Rory wobbles on Saturday, the standings crack open. Mike Scarr in particular benefits, since he's the only top-tier entry positioned to overtake the field if Rory falls back into the pack.</p>
   </div>
 
   <div class="footer">
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 27 &bull; Built with Claude</span>
+    <span class="version">App version 34 &bull; Built with Claude</span>
   </div>
 </div>
 
@@ -272,7 +288,7 @@ const NAME_MAP = {
   "Fitzpatrick": ["Matt","Fitzpatrick"],
   "Fleetwood": ["Tommy","Fleetwood"],
   "Gotterup": ["Chris","Gotterup"],
-  "Hojgaard": ["Nicolai","Højgaard","Hojgaard","Hojgaard, N"],
+  "Hojgaard": ["Nicolai","Hojgaard"],
   "Hovland": ["Viktor","Hovland"],
   "Kim": ["Si Woo","Kim"],
   "Koepka": ["Brooks","Koepka"],
@@ -292,31 +308,44 @@ const NAME_MAP = {
 
 // ── State ──
 // Day 1 final scores — used as fallback if ESPN API fails
+// 36-hole fallback (end of Round 2, Friday April 10). Used if ESPN is unreachable.
+// missedCut: true means the player is out — score is frozen and won't change.
+const CUT_LINE = 4; // 2026 Masters cut line: +4
 const FALLBACK_SCORES = {
-  "Aberg":     { score: 3,  thru: "F", position: "T49", source: "day1" },
-  "Bhatia":    { score: 1,  thru: "F", position: "",    source: "day1" },
-  "Conners":   { score: 3,  thru: "F", position: "",    source: "day1" },
-  "DeChambeau":{ score: 4,  thru: "F", position: "",    source: "day1" },
-  "Fitzpatrick":{score: 1,  thru: "F", position: "",    source: "day1" },
-  "Fleetwood": { score: -1, thru: "F", position: "",    source: "day1" },
-  "Gotterup":  { score: 2,  thru: "F", position: "",    source: "day1" },
-  "Hojgaard":  { score: 0,  thru: "F", position: "",    source: "day1" },
-  "Hovland":   { score: 3,  thru: "F", position: "",    source: "day1" },
-  "Kim":       { score: 1,  thru: "F", position: "",    source: "day1" },
-  "Koepka":    { score: 0,  thru: "F", position: "",    source: "day1" },
-  "Lee":       { score: 1,  thru: "F", position: "",    source: "day1" },
-  "MacIntyre": { score: 8,  thru: "F", position: "",    source: "day1" },
-  "Matsuyama": { score: 1,  thru: "F", position: "",    source: "day1" },
-  "McIlroy":   { score: -5, thru: "F", position: "T1",  source: "day1" },
-  "Morikawa":  { score: 2,  thru: "F", position: "",    source: "day1" },
-  "Rahm":      { score: 6,  thru: "F", position: "",    source: "day1" },
-  "Reed":      { score: -3, thru: "F", position: "T3",  source: "day1" },
-  "Rose":      { score: -2, thru: "F", position: "T6",  source: "day1" },
-  "Schauffele":{ score: -2, thru: "F", position: "T6",  source: "day1" },
-  "Scheffler": { score: -2, thru: "F", position: "T6",  source: "day1" },
-  "Young":     { score: 1,  thru: "F", position: "",    source: "day1" },
-  "Zalatoris": { score: 2,  thru: "F", position: "",    source: "day1" }
+  "Aberg":     { score:  0, thru: "F", position: "",    source: "day2", missedCut: false },
+  "Bhatia":    { score:  6, thru: "F", position: "MC",  source: "day2", missedCut: true  },
+  "Conners":   { score:  4, thru: "F", position: "",    source: "day2", missedCut: false },
+  "DeChambeau":{ score:  5, thru: "F", position: "MC",  source: "day2", missedCut: true  },
+  "Fitzpatrick":{score: -1, thru: "F", position: "",    source: "day2", missedCut: false },
+  "Fleetwood": { score: -5, thru: "F", position: "T4",  source: "day2", missedCut: false },
+  "Gotterup":  { score: -3, thru: "F", position: "",    source: "day2", missedCut: false },
+  "Hojgaard":  { score:  6, thru: "F", position: "MC",  source: "day2", missedCut: true  },
+  "Hovland":   { score:  2, thru: "F", position: "",    source: "day2", missedCut: false },
+  "Kim":       { score:  4, thru: "F", position: "",    source: "day2", missedCut: false },
+  "Koepka":    { score: -3, thru: "F", position: "",    source: "day2", missedCut: false },
+  "Lee":       { score:  5, thru: "F", position: "",    source: "day2", missedCut: false },
+  "MacIntyre": { score:  7, thru: "F", position: "MC",  source: "day2", missedCut: true  },
+  "Matsuyama": { score: -2, thru: "F", position: "",    source: "day2", missedCut: false },
+  "McIlroy":   { score:-12, thru: "F", position: "1",   source: "day2", missedCut: false },
+  "Morikawa":  { score: -1, thru: "F", position: "",    source: "day2", missedCut: false },
+  "Rahm":      { score:  4, thru: "F", position: "",    source: "day2", missedCut: false },
+  "Reed":      { score: -6, thru: "F", position: "T2",  source: "day2", missedCut: false },
+  "Rose":      { score: -5, thru: "F", position: "T4",  source: "day2", missedCut: false },
+  "Schauffele":{ score: -2, thru: "F", position: "",    source: "day2", missedCut: false },
+  "Scheffler": { score:  0, thru: "F", position: "",    source: "day2", missedCut: false },
+  "Young":     { score: -4, thru: "F", position: "T7",  source: "day2", missedCut: false },
+  "Zalatoris": { score:  0, thru: "F", position: "WD",  source: "day2", missedCut: false, notInField: true }
 };
+
+// Players known to have missed the cut. Manually maintained from Friday night
+// onward; once R3 starts, the live data will also auto-detect MC players from
+// missing period:3 entries in linescores.
+const KNOWN_MISSED_CUT = new Set(["DeChambeau", "Bhatia", "MacIntyre", "Hojgaard"]);
+
+// Players who didn't start the tournament at all (not in field, withdrew, etc.)
+// These render with the same greyed-out treatment as MC, but show "—" instead
+// of a score and a "WD" chip instead of "MC".
+const KNOWN_NOT_IN_FIELD = new Set(["Zalatoris"]);
 
 let playerScores = { ...FALLBACK_SCORES }; // Start with fallback so page renders immediately
 let tournamentStatus = "unknown";
@@ -358,16 +387,16 @@ let rawStatusDetail = ""; // Raw ESPN status string for badge display
 
 // Full tournament leaderboard (independent of pool picks) — top 10 for the leaderboard widget
 const FALLBACK_LEADERBOARD = [
-  { name: "Rory McIlroy",     score: -5, thru: "F" },
-  { name: "Sam Burns",        score: -5, thru: "F" },
-  { name: "Kurt Kitayama",    score: -3, thru: "F" },
-  { name: "Jason Day",        score: -3, thru: "F" },
-  { name: "Patrick Reed",     score: -3, thru: "F" },
-  { name: "Scottie Scheffler",score: -2, thru: "F" },
-  { name: "Xander Schauffele",score: -2, thru: "F" },
-  { name: "Justin Rose",      score: -2, thru: "F" },
-  { name: "Shane Lowry",      score: -2, thru: "F" },
-  { name: "Tommy Fleetwood",  score: -1, thru: "F" }
+  { name: "Rory McIlroy",       score: -12, thru: "F", playerState: "post" },
+  { name: "Sam Burns",          score:  -6, thru: "F", playerState: "post" },
+  { name: "Patrick Reed",       score:  -6, thru: "F", playerState: "post" },
+  { name: "Justin Rose",        score:  -5, thru: "F", playerState: "post" },
+  { name: "Shane Lowry",        score:  -5, thru: "F", playerState: "post" },
+  { name: "Tommy Fleetwood",    score:  -5, thru: "F", playerState: "post" },
+  { name: "Wyndham Clark",      score:  -4, thru: "F", playerState: "post" },
+  { name: "Tyrrell Hatton",     score:  -4, thru: "F", playerState: "post" },
+  { name: "Haotong Li",         score:  -4, thru: "F", playerState: "post" },
+  { name: "Jason Day",          score:  -4, thru: "F", playerState: "post" }
 ];
 let fullLeaderboard = [...FALLBACK_LEADERBOARD];
 
@@ -398,7 +427,7 @@ function matchPlayer(espnName) {
   if (!espnName) return null;
   const lower = normalize(espnName);
   // Common last names that need first-name disambiguation
-  const ambiguous = new Set(["lee", "kim", "young", "rose"]);
+  const ambiguous = new Set(["lee", "kim", "young", "rose", "hojgaard"]);
 
   for (const [shortName, keywords] of Object.entries(NAME_MAP)) {
     const normKeywords = keywords.map(normalize);
@@ -521,6 +550,19 @@ function parsePlayerState(c, currentRound) {
   if (!Array.isArray(holes) || holes.length === 0) return "pre";
   if (holes.length >= 18) return "post";
   return "in";
+}
+
+// Detect if a player missed the cut. Combines two signals:
+//   1. Hardcoded KNOWN_MISSED_CUT set (manually maintained Friday night)
+//   2. Auto-detected from linescores: if R3 has started and the player has
+//      no period:3 entry, they're not playing the weekend
+function detectMissedCut(c, shortName, currentRound) {
+  if (shortName && KNOWN_MISSED_CUT.has(shortName)) return true;
+  if (currentRound >= 3 && Array.isArray(c.linescores)) {
+    const hasNextRound = c.linescores.some(x => x.period === currentRound);
+    if (!hasNextRound) return true;
+  }
+  return false;
 }
 
 // Pull the tee time for a given round out of the linescores statistics block.
@@ -650,10 +692,15 @@ async function fetchScores() {
       if (!shortName || score === null) continue;
       matchedCount++;
 
+      const missedCut = detectMissedCut(c, shortName, roundForParsing);
+      const notInField = KNOWN_NOT_IN_FIELD.has(shortName);
+
       newScores[shortName] = {
-        score,
+        score: notInField ? 0 : score,
         thru,
-        playerState,
+        playerState: notInField ? "wd" : (missedCut ? "mc" : playerState),
+        missedCut,
+        notInField,
         position: c.status?.position?.displayName || "",
         espnName: name,
         source: "live"
@@ -874,7 +921,13 @@ function getFullName(shortName) {
 //   finished → "F"
 //   pre-tee  → "PRE"
 //   unknown  → blank
-function renderStatusChip(state, thru) {
+function renderStatusChip(state, thru, missedCut, notInField) {
+  if (notInField || state === "wd") {
+    return `<span class="status-chip chip-mc">WD</span>`;
+  }
+  if (missedCut || state === "mc") {
+    return `<span class="status-chip chip-mc">MC</span>`;
+  }
   if (state === "in") {
     // If we have a thru number, show it; otherwise just the flag
     const hole = (thru && thru !== "F") ? thru : "";
@@ -993,18 +1046,27 @@ function renderStandings() {
   const standings = ENTRIES.map(entry => {
     let total = 0;
     let allKnown = true;
+    let activeCount = 0;
     const pickScores = entry.picks.map(p => {
       const data = playerScores[p];
-      if (!data) { allKnown = false; return { name: p, score: null, thru: "", playerState: "" }; }
+      if (!data) {
+        allKnown = false;
+        return { name: p, score: null, thru: "", playerState: "", missedCut: false, notInField: false };
+      }
       total += data.score;
-      return { name: p, score: data.score, thru: data.thru || "", playerState: data.playerState || "" };
+      const mc = !!data.missedCut;
+      const nif = !!data.notInField;
+      if (!mc && !nif) activeCount++;
+      return { name: p, score: data.score, thru: data.thru || "", playerState: data.playerState || "", missedCut: mc, notInField: nif };
     });
     // Get alternate's score for tiebreaking (null if not in our data)
     const altData = playerScores[entry.alt];
     const altScore = altData ? altData.score : null;
     const altThru = altData ? (altData.thru || "") : "";
     const altState = altData ? (altData.playerState || "") : "";
-    return { ...entry, pickScores, total, altScore, altThru, altState, allKnown };
+    const altMC = altData ? !!altData.missedCut : false;
+    const altNIF = altData ? !!altData.notInField : false;
+    return { ...entry, pickScores, total, altScore, altThru, altState, altMC, altNIF, activeCount, allKnown };
   });
 
   // Sort: primary by total, secondary by alt score (null sorts last)
@@ -1051,18 +1113,35 @@ function renderStandings() {
     const totalClass = getScoreClass(entry.total);
     html += `<td class="total ${totalClass}">${formatScore(entry.total)}</td>`;
 
+    // Active picks (X/4) — number of picks not yet eliminated by missed cut.
+    // The "low" class fires when 2 or more picks are dead — visual warning.
+    const totalPicks = entry.picks.length;
+    const activeClass = "active-count"
+      + (entry.activeCount === totalPicks ? " active-full" : "")
+      + (entry.activeCount <= totalPicks - 2 ? " active-low" : "")
+      + (entry.activeCount < totalPicks && entry.activeCount > totalPicks - 2 ? " active-mid" : "");
+    html += `<td class="${activeClass}">${entry.activeCount}/${totalPicks}</td>`;
+
     entry.pickScores.forEach(ps => {
       const cls = ps.score === null ? "unknown" : getScoreClass(ps.score);
-      const scoreStr = ps.score === null ? "?" : formatScore(ps.score);
-      const chip = renderStatusChip(ps.playerState, ps.thru);
-      html += `<td class="pick" data-pick="${ps.name}"><span class="player-name">${ps.name}</span><span class="score ${cls}">${scoreStr}</span>${chip}</td>`;
+      let scoreStr;
+      if (ps.score === null) scoreStr = "?";
+      else if (ps.notInField) scoreStr = "—";
+      else scoreStr = formatScore(ps.score);
+      const chip = renderStatusChip(ps.playerState, ps.thru, ps.missedCut, ps.notInField);
+      const pickCls = "pick" + (ps.missedCut || ps.notInField ? " is-mc" : "");
+      html += `<td class="${pickCls}" data-pick="${ps.name}"><span class="player-name">${ps.name}</span><span class="score ${cls}">${scoreStr}</span>${chip}</td>`;
     });
 
     // Alternate with score (used as tiebreaker)
     const altCls = entry.altScore === null ? "unknown" : getScoreClass(entry.altScore);
-    const altScoreStr = entry.altScore === null ? "?" : formatScore(entry.altScore);
-    const altChip = renderStatusChip(entry.altState, entry.altThru);
-    html += `<td class="alternate" data-pick="${entry.alt}"><span class="player-name">${entry.alt}</span><span class="score ${altCls}" style="font-size:.75rem">${altScoreStr}</span>${altChip}</td>`;
+    let altScoreStr;
+    if (entry.altScore === null) altScoreStr = "?";
+    else if (entry.altNIF) altScoreStr = "—";
+    else altScoreStr = formatScore(entry.altScore);
+    const altChip = renderStatusChip(entry.altState, entry.altThru, entry.altMC, entry.altNIF);
+    const altTdCls = "alternate" + (entry.altMC || entry.altNIF ? " is-mc" : "");
+    html += `<td class="${altTdCls}" data-pick="${entry.alt}"><span class="player-name">${entry.alt}</span><span class="score ${altCls}" style="font-size:.75rem">${altScoreStr}</span>${altChip}</td>`;
     html += `</tr>`;
   });
 
