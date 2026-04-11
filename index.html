@@ -1766,41 +1766,54 @@ function renderAnalysis(standings) {
   const gapToSecond = second ? leader.totalPrize - second.totalPrize : 0;
 
   // Biggest Mover / Biggest Drop — entries with the largest positive and
-  // negative rank deltas vs the baseline (end-of-Friday) ranks. Only
-  // meaningful once live data has landed; while we're on the fallback,
+  // negative rank deltas vs the baseline (end-of-Friday) ranks. Ties are
+  // common (e.g. several entries all jumping 3 spots), so we collect ALL
+  // entries that share the top delta rather than picking one arbitrarily.
+  // Only meaningful once live data has landed; while we're on the fallback,
   // current == baseline by construction so we show placeholders instead.
   let moverCard, dropCard;
   if (usingFallback) {
     moverCard = { label: "Biggest Mover", value: "—", detail: "Awaiting live data" };
     dropCard  = { label: "Biggest Drop",  value: "—", detail: "Awaiting live data" };
   } else {
-    let bestDelta = -Infinity, bestEntry = null;
-    let worstDelta = Infinity, worstEntry = null;
-    standings.forEach(e => {
-      const base = BASELINE_RANKS[e.name];
-      if (base == null) return;
-      const delta = base - e.rank;
-      if (delta > bestDelta)  { bestDelta = delta;  bestEntry  = e; }
-      if (delta < worstDelta) { worstDelta = delta; worstEntry = e; }
-    });
-    if (bestEntry && bestDelta > 0) {
-      moverCard = {
-        label: "Biggest Mover",
-        value: bestEntry.name,
-        detail: `▲${bestDelta} — now ${bestEntry.rankDisplay}, was ${BASELINE_RANKS[bestEntry.name]} Friday`
-      };
-    } else {
-      moverCard = { label: "Biggest Mover", value: "No movement yet", detail: "vs end of Friday" };
-    }
-    if (worstEntry && worstDelta < 0) {
-      dropCard = {
-        label: "Biggest Drop",
-        value: worstEntry.name,
-        detail: `▼${-worstDelta} — now ${worstEntry.rankDisplay}, was ${BASELINE_RANKS[worstEntry.name]} Friday`
-      };
-    } else {
-      dropCard = { label: "Biggest Drop", value: "No drops yet", detail: "vs end of Friday" };
-    }
+    // Compute deltas for every entry that has a baseline rank.
+    const withDelta = standings
+      .filter(e => BASELINE_RANKS[e.name] != null)
+      .map(e => ({ entry: e, delta: BASELINE_RANKS[e.name] - e.rank }));
+
+    const maxDelta = withDelta.reduce((m, x) => Math.max(m, x.delta), -Infinity);
+    const minDelta = withDelta.reduce((m, x) => Math.min(m, x.delta),  Infinity);
+
+    // Helper: render a card for a group of tied entries. Picks first names
+    // from the "Last, First" format and joins them. If many tie, truncates
+    // to "A, B, C +N more" so the card doesn't blow up vertically.
+    const firstNameOf = name => (name.split(",")[1] || name).trim();
+    const buildCard = (label, group, deltaLabel, emptyValue, emptyDetail) => {
+      if (!group.length) return { label, value: emptyValue, detail: emptyDetail };
+      const names = group.map(g => firstNameOf(g.entry.name));
+      const MAX_SHOWN = 3;
+      const shown = names.slice(0, MAX_SHOWN).join(", ");
+      const more = names.length > MAX_SHOWN ? ` +${names.length - MAX_SHOWN} more` : "";
+      const value = shown + more;
+      const detail = group.length === 1
+        ? `${deltaLabel} vs end of Friday`
+        : `${group.length} entries tied — ${deltaLabel} vs end of Friday`;
+      return { label, value, detail };
+    };
+
+    const moversGroup = maxDelta > 0 ? withDelta.filter(x => x.delta === maxDelta) : [];
+    const dropsGroup  = minDelta < 0 ? withDelta.filter(x => x.delta === minDelta) : [];
+
+    moverCard = buildCard(
+      "Biggest Mover", moversGroup,
+      moversGroup.length ? `▲${maxDelta}` : "",
+      "No movement yet", "vs end of Friday"
+    );
+    dropCard = buildCard(
+      "Biggest Drop", dropsGroup,
+      dropsGroup.length ? `▼${-minDelta}` : "",
+      "No drops yet", "vs end of Friday"
+    );
   }
 
   // Cut Damage — how many entries have at least one primary pick that MC'd.
