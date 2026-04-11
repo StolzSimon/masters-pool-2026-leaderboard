@@ -35,20 +35,35 @@
   .rank-1{color:var(--gold);font-size:1.35rem}
   .rank-2,.rank-3{color:var(--green-dark)}
   .name{font-weight:600;font-size:.92rem}
-  .pick{font-size:.82rem;text-align:center}
-  .pick .player-name{display:block;font-size:.82rem;color:#3a3a3a;font-weight:500;line-height:1.15;letter-spacing:-.1px}
-  .pick .score{display:block;font-weight:700;font-size:.92rem;margin-top:1px}
-  .pick .thru{display:block;font-size:.65rem;color:var(--muted);font-weight:400}
-  .status-chip{display:inline-block;margin-top:2px;font-size:.62rem;font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:.3px;line-height:1.3;font-variant-numeric:tabular-nums}
+  .pick{font-size:.78rem;text-align:center;padding:6px 4px;line-height:1.2}
+  .pick .pick-line1{line-height:1.15;display:block}
+  .pick .pos-label{font-weight:400;color:var(--muted);font-size:.68rem;margin-right:2px;font-variant-numeric:tabular-nums}
+  .pick .player-name{font-weight:700;color:#222;font-size:.8rem;letter-spacing:-.1px}
+  .pick .pick-score{display:block;font-weight:800;font-size:.95rem;margin:2px 0 1px;font-variant-numeric:tabular-nums;line-height:1.1}
+  .pick .pick-score.under{color:var(--good)}
+  .pick .pick-score.over{color:var(--red)}
+  .pick .pick-score.even{color:var(--dark)}
+  .pick .pick-score.unknown{color:var(--muted)}
+  .pick .pick-line3{display:flex;align-items:center;justify-content:center;gap:4px;line-height:1.15;flex-wrap:wrap}
+  .pick .pick-prize{font-size:.66rem;color:#666;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.1px}
+  .alternate.pick .player-name{font-size:.76rem}
+  .alternate.pick .pick-score{font-size:.88rem}
+  .alternate.pick .pick-prize{font-size:.62rem}
+  .status-chip{display:inline-block;font-size:.6rem;font-weight:700;padding:1px 4px;border-radius:3px;letter-spacing:.3px;line-height:1.3;font-variant-numeric:tabular-nums;vertical-align:baseline}
   .status-chip.chip-live{background:rgba(220,53,69,.12);color:#c62233;animation:chipPulse 1.8s ease-in-out infinite}
   .status-chip.chip-final{background:rgba(40,120,60,.12);color:#286e3e}
   .status-chip.chip-pre{background:rgba(0,0,0,.06);color:var(--muted)}
   .status-chip.chip-mc{background:#5a5a5a;color:#fff;letter-spacing:.5px}
   @keyframes chipPulse{0%,100%{opacity:1}50%{opacity:.55}}
 
-  /* Missed-cut treatment on the pick cell: dim the player name and strike the score */
-  .pick.is-mc .player-name,.alternate.is-mc .player-name{color:#9a9a9a;text-decoration:line-through;text-decoration-color:#bbb}
-  .pick.is-mc .score,.alternate.is-mc .score{color:#9a9a9a!important;text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:#9a9a9a}
+  /* Missed-cut treatment: dim the player name and strike it through, dim everything else */
+  .pick.is-mc .player-name{color:#9a9a9a;text-decoration:line-through;text-decoration-color:#bbb}
+  .pick.is-mc .pick-score{color:#9a9a9a!important;text-decoration:line-through;text-decoration-thickness:1.5px;text-decoration-color:#9a9a9a}
+  .pick.is-mc .pos-label{color:#aaa}
+  .pick.is-mc .pick-prize{color:#9a9a9a}
+
+  /* Total column now shows prize money sum */
+  .total.prize-total{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-weight:800;font-size:.92rem;color:var(--green-dark);font-variant-numeric:tabular-nums;text-align:center;letter-spacing:-.3px;padding:0 6px}
 
   /* Active picks count column (e.g. "3/4") */
   .active-count{font-size:.85rem;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;color:var(--dark)}
@@ -77,15 +92,17 @@
   .lb-row:last-child{border-bottom:none}
   .lb-row .pos{color:var(--muted);width:30px}
   .lb-row .player{flex:1;font-weight:600}
-  .lb-row .sc{font-weight:700;width:50px;text-align:right}
+  .lb-row .sc{font-weight:700;width:42px;text-align:right}
   .lb-row .sc.under{color:var(--good)}
   .lb-row .sc.over{color:var(--red)}
   .lb-row .sc.even{color:var(--dark)}
-  .lb-row .thru-info{font-size:.78rem;color:var(--muted);width:58px;text-align:right;font-variant-numeric:tabular-nums}
+  .lb-row .prize{width:58px;text-align:right;font-size:.72rem;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:-.1px;padding-left:6px}
+  .lb-row .thru-info{font-size:.78rem;color:var(--muted);width:52px;text-align:right;font-variant-numeric:tabular-nums}
   .lb-row .thru-info .flag{font-size:.85rem;margin-right:2px;filter:saturate(1.1)}
   .lb-row.lb-header{font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;padding-bottom:4px;border-bottom:1px solid rgba(0,0,0,.12)}
   .lb-row.lb-header .player{font-weight:700}
   .lb-row.lb-header .sc{color:var(--muted);font-weight:700}
+  .lb-row.lb-header .prize{color:var(--muted);font-weight:700}
   .lb-row.is-live{background:rgba(220,53,69,.04)}
   .lb-row.selectable{cursor:pointer;transition:background .15s ease,transform .1s ease}
   .lb-row.selectable:hover{background:rgba(0,100,60,.06)}
@@ -150,6 +167,12 @@
     <span class="tag" id="refreshTag">Auto-refreshes every 5 min</span>
   </div>
 
+  <div class="payout-note">
+    <strong>Just for fun — no guarantees.</strong> Official rankings and winners will come from Rob after the tournament wraps. Everything here is cobbled together from ESPN's live data, some questionable AI-assisted coding, and possibly one beer too many. Do your best not to take it too seriously. 🍺
+    <br><br>
+    <strong>New:</strong> Now that the cut is set, standings are calculated by <strong>total prize money earned</strong> instead of strokes-to-par. Missed-cut picks get their $25K cut cheque and nothing more, so a single big finish from one of your players can swing things dramatically. Welcome to the real scoring.
+  </div>
+
   <div id="errorMsg" class="error-msg" style="display:none"></div>
 
   <div id="miniLeaderboard" class="leaderboard-mini">
@@ -170,7 +193,7 @@
         <tr>
           <th class="center">#</th>
           <th>Entry</th>
-          <th class="center">Total</th>
+          <th class="center">Prize $</th>
           <th class="center">Active</th>
           <th class="center">Pick 1</th>
           <th class="center">Pick 2</th>
@@ -189,10 +212,6 @@
     <div class="legend-item"><span class="legend-dot" style="background:#2e7d32"></span> Under par</div>
     <div class="legend-item"><span class="legend-dot" style="background:#c62828"></span> Over par</div>
     <div class="legend-item"><span class="legend-dot" style="background:#fff8d6;border:1px solid #c8a951"></span> Your favorites (tap to mark)</div>
-  </div>
-
-  <div class="payout-note">
-    <strong>Remember:</strong> This pool pays by total prize money earned, not strokes. These standings use cumulative to-par as a proxy — final payout will be based on actual earnings. And last year's champion was 7 shots back after Round 1. Plenty of golf to play.
   </div>
 
   <div id="analysisSection" class="commentary" style="display:none">
@@ -218,20 +237,19 @@
     <p><strong>Akshay Bhatia — Heartbreak cut.</strong> Hit a gorgeous bunker shot at 17 to nearly hole out, then double-bogeyed 18 to fall to the wrong side of the line. Brutal.</p>
 
     <h4 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--green-dark);margin-top:14px;margin-bottom:6px">🎯 The Pool Story</h4>
-    <p><strong>Debby Chan is leading the pool at -22</strong> with the dream lineup: Aberg + Fleetwood + McIlroy + Rose. Three of her four picks are inside the top 6 on the actual Masters leaderboard, and Aberg quietly making the cut at even par means none of her picks blew up. She's the only entry combining McIlroy, Fleetwood, AND Rose, and her three-shot lead over the field is the kind of margin that's hard to give back.</p>
-    <p><strong>Cody Pantages sits 2nd at -19</strong> with McIlroy + Rose + Schauffele + Scheffler. Schauffele only finished at -2 after bogeying Amen Corner (11–12–13), and Scheffler had the worst day of any picked player who made the cut (E). Two underperforming picks are the reason he's three back of Debby instead of pressuring her at the top.</p>
-    <p><strong>Mike Scarr is solo 6th at -13</strong> — the only top-tier entry without McIlroy, riding his Reed (-6) primary pick. Reed + Rose + Schauffele + Scheffler is the contrarian lineup nobody else thought to build, and it's the only way to be this high without the runaway leader on your card.</p>
-    <p><strong>Rob Forbes has the cruelest entry in the pool at 7th, -11.</strong> His primaries are Aberg + Fleetwood + Schauffele + Young — all four still alive, no MCs — but he made the fatal choice of picking <em>McIlroy as his alternate</em>. The alt only counts as a tiebreaker. Had he swapped any primary for McIlroy, he'd be challenging Debby for first place.</p>
-    <p><strong>Colin Ball is the day's biggest casualty</strong>, sitting dead last at +12 with only <strong>2/4 active picks</strong>. He's the only entry in the pool who picked BOTH Bhatia AND MacIntyre as primaries — both missed the cut. His other two picks (Conners +4, Fleetwood -5) can't possibly dig him out.</p>
-    <p><strong>The cut also took 16 entries down to 3/4 active or worse.</strong> Bryson DeChambeau MC'd 13 entries (each frozen at +5). Bhatia and MacIntyre each took out their lone picker (Colin Ball got both). And Nicolai Højgaard's MC dropped Elaine Reynolds from 4/4 to 3/4 — a quiet but real hit, since her remaining lineup (Aberg + McIlroy + Scheffler) was otherwise solid. Aberg quietly making the cut at even par rescued the 19 entries who took him as the most-popular pre-tournament pick. Watch the new "Active" column on Saturday — it's the cleanest signal of who's still in this.</p>
-    <p style="margin-top:10px;font-size:.82rem;color:var(--muted);font-style:italic">Remember: this pool pays by total prize money earned, not strokes. Debby's three-shot pool lead is built on McIlroy's six-shot tournament lead — if Rory wobbles on Saturday, the standings crack open. Mike Scarr in particular benefits, since he's the only top-tier entry positioned to overtake the field if Rory falls back into the pack.</p>
+    <p><strong>Debby Chan is leading the pool at $6.18M</strong> with the dream lineup: Aberg + Fleetwood + McIlroy + Rose. Three of her four picks sit in the top 6 on the Masters leaderboard, and she's the only entry combining McIlroy with both Fleetwood AND Rose. Her ~$500K cushion over 2nd place is built on a card where every pick made the cut — no dead weight, no MC frozen at $25K, no tiebreaker anxiety.</p>
+    <p><strong>Cody Pantages sits 2nd at $5.67M</strong> with McIlroy + Rose + Schauffele + Scheffler. On paper this looks elite, but Schauffele only finished at -2 after bogeying Amen Corner (11–12–13), and Scheffler had the worst day of any made-cut pick (E, after a second-round 74). Those two underperforming prize slots are why he's $500K behind Debby instead of pressuring her at the top.</p>
+    <p><strong>The "McIlroy gravity" effect reshaped the top 10.</strong> McIlroy's prize of $4.2M is worth <em>2.3× the T2 prize</em> of $1.85M — an enormous gap that pulls any entry containing him straight into the money. The casualty: <strong>Mike Scarr</strong>, whose contrarian Reed + Rose + Schauffele + Scheffler stack had him solo 6th under strokes scoring, now drops out of the top 10 entirely at ~$3.3M. Reed at T2 is excellent, but "excellent" isn't "$4.2M excellent." Meanwhile <strong>Scarr Don, Forbes Heather, Pearce Barb, Maitland Anthony, and Thomas Paul</strong> all jumped into the top 10 purely on the strength of McIlroy as a primary.</p>
+    <p><strong>Rob Forbes's McIlroy-as-alt decision is now catastrophic.</strong> His four primaries (Aberg + Fleetwood + Schauffele + Young) are all alive and well, but under prize-money scoring the gap between McIlroy-as-primary ($4.2M) and McIlroy-as-alt ($0 contribution, pure tiebreaker) is the single biggest swing in the pool. Had he swapped any primary for McIlroy, he'd be pushing Debby for first. Instead he's outside the top 10 at ~$2.06M — and his $4.2M alt is the cruelest tiebreaker edge that will never be used.</p>
+    <p><strong>Pearce Barb is top 10 at $4.89M despite losing DeChambeau to the cut.</strong> Her card — DeChambeau ($25K frozen) + Fitzpatrick ($299K) + McIlroy ($4.2M) + Schauffele ($362K) — shows the inversion this year's scoring has produced: McIlroy alone covers 86% of her total, and the MC'd DeChambeau barely dents her position. Under strokes scoring, a MC was a +5 anchor that sank you; under prize money, it's a $25K floor you hardly notice when your other picks are earning millions.</p>
+    <p><strong>Scarr Ben is now dead last at $753K.</strong> His lineup — Aberg + DeChambeau + Fitzpatrick + Rahm — got hit twice: DeChambeau MC'd at $25K, and Rahm is clinging to the cut line at +4 earning a minimal share. Aberg ($244K) and Fitzpatrick ($299K) can't drag him out of the basement. Interestingly, <strong>Colin Ball</strong> — who was dead last under strokes scoring with his 2/4 active card (Bhatia and MacIntyre both MC) — is actually <em>ahead</em> of Ben here at ~$1.1M, entirely because Fleetwood at $868K is doing 80% of Colin's work single-handedly.</p>
   </div>
 
   <div class="footer">
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 36 &bull; Built with Claude</span>
+    <span class="version">App version 40 &bull; Built with Claude</span>
   </div>
 </div>
 
@@ -309,41 +327,135 @@ const NAME_MAP = {
 // 36-hole fallback (end of Round 2, Friday April 10). Used if ESPN is unreachable.
 // missedCut: true means the player is out — score is frozen and won't change.
 const CUT_LINE = 4; // 2026 Masters cut line: +4
+// Hardcoded fallback scores from end of Round 2 (Friday April 10, 2026).
+// `prizeMoney` and `position` are best-effort estimates based on partial
+// leaderboard knowledge — the live ESPN data computes both correctly when
+// available. If a position estimate is wrong, the fallback values will be off
+// proportionally.
 const FALLBACK_SCORES = {
-  "Aberg":     { score:  0, thru: "F", position: "",    source: "day2", missedCut: false },
-  "Bhatia":    { score:  6, thru: "F", position: "MC",  source: "day2", missedCut: true  },
-  "Conners":   { score:  4, thru: "F", position: "",    source: "day2", missedCut: false },
-  "DeChambeau":{ score:  5, thru: "F", position: "MC",  source: "day2", missedCut: true  },
-  "Fitzpatrick":{score: -1, thru: "F", position: "",    source: "day2", missedCut: false },
-  "Fleetwood": { score: -5, thru: "F", position: "T4",  source: "day2", missedCut: false },
-  "Gotterup":  { score: -3, thru: "F", position: "",    source: "day2", missedCut: false },
-  "Hojgaard":  { score:  6, thru: "F", position: "MC",  source: "day2", missedCut: true  },
-  "Hovland":   { score:  2, thru: "F", position: "",    source: "day2", missedCut: false },
-  "Kim":       { score:  4, thru: "F", position: "",    source: "day2", missedCut: false },
-  "Koepka":    { score: -3, thru: "F", position: "",    source: "day2", missedCut: false },
-  "Lee":       { score:  5, thru: "F", position: "",    source: "day2", missedCut: false },
-  "MacIntyre": { score:  7, thru: "F", position: "MC",  source: "day2", missedCut: true  },
-  "Matsuyama": { score: -2, thru: "F", position: "",    source: "day2", missedCut: false },
-  "McIlroy":   { score:-12, thru: "F", position: "1",   source: "day2", missedCut: false },
-  "Morikawa":  { score: -1, thru: "F", position: "",    source: "day2", missedCut: false },
-  "Rahm":      { score:  4, thru: "F", position: "",    source: "day2", missedCut: false },
-  "Reed":      { score: -6, thru: "F", position: "T2",  source: "day2", missedCut: false },
-  "Rose":      { score: -5, thru: "F", position: "T4",  source: "day2", missedCut: false },
-  "Schauffele":{ score: -2, thru: "F", position: "",    source: "day2", missedCut: false },
-  "Scheffler": { score:  0, thru: "F", position: "",    source: "day2", missedCut: false },
-  "Young":     { score: -4, thru: "F", position: "T7",  source: "day2", missedCut: false },
-  "Zalatoris": { score:  0, thru: "F", position: "WD",  source: "day2", missedCut: false, notInField: true }
+  "Aberg":     { score:  0, thru: "F", position: "T19", prizeMoney: 244125,  source: "day2", missedCut: false },
+  "Bhatia":    { score:  6, thru: "F", position: "MC",  prizeMoney:  25000,  source: "day2", missedCut: true  },
+  "Conners":   { score:  4, thru: "F", position: "T22", prizeMoney: 184800,  source: "day2", missedCut: false },
+  "DeChambeau":{ score:  5, thru: "F", position: "MC",  prizeMoney:  25000,  source: "day2", missedCut: true  },
+  "Fitzpatrick":{score: -1, thru: "F", position: "T17", prizeMoney: 299250,  source: "day2", missedCut: false },
+  "Fleetwood": { score: -5, thru: "F", position: "T4",  prizeMoney: 868000,  source: "day2", missedCut: false },
+  "Gotterup":  { score: -3, thru: "F", position: "T13", prizeMoney: 425250,  source: "day2", missedCut: false },
+  "Hojgaard":  { score:  6, thru: "F", position: "MC",  prizeMoney:  25000,  source: "day2", missedCut: true  },
+  "Hovland":   { score:  2, thru: "F", position: "T21", prizeMoney: 210000,  source: "day2", missedCut: false },
+  "Kim":       { score:  4, thru: "F", position: "T22", prizeMoney: 184800,  source: "day2", missedCut: false },
+  "Koepka":    { score: -3, thru: "F", position: "T13", prizeMoney: 425250,  source: "day2", missedCut: false },
+  "Lee":       { score:  5, thru: "F", position: "MC",  prizeMoney:  25000,  source: "day2", missedCut: true  },
+  "MacIntyre": { score:  7, thru: "F", position: "MC",  prizeMoney:  25000,  source: "day2", missedCut: true  },
+  "Matsuyama": { score: -2, thru: "F", position: "T15", prizeMoney: 362250,  source: "day2", missedCut: false },
+  "McIlroy":   { score:-12, thru: "F", position: "1",   prizeMoney: 4200000, source: "day2", missedCut: false },
+  "Morikawa":  { score: -1, thru: "F", position: "T17", prizeMoney: 299250,  source: "day2", missedCut: false },
+  "Rahm":      { score:  4, thru: "F", position: "T22", prizeMoney: 184800,  source: "day2", missedCut: false },
+  "Reed":      { score: -6, thru: "F", position: "T2",  prizeMoney: 1848000, source: "day2", missedCut: false },
+  "Rose":      { score: -5, thru: "F", position: "T4",  prizeMoney: 868000,  source: "day2", missedCut: false },
+  "Schauffele":{ score: -2, thru: "F", position: "T15", prizeMoney: 362250,  source: "day2", missedCut: false },
+  "Scheffler": { score:  0, thru: "F", position: "T19", prizeMoney: 244125,  source: "day2", missedCut: false },
+  "Young":     { score: -4, thru: "F", position: "T7",  prizeMoney: 589750,  source: "day2", missedCut: false },
+  "Zalatoris": { score:  0, thru: "F", position: "WD",  prizeMoney: 0,       source: "day2", missedCut: false, notInField: true }
 };
 
 // Players known to have missed the cut. Manually maintained from Friday night
 // onward; once R3 starts, the live data will also auto-detect MC players from
 // missing period:3 entries in linescores.
-const KNOWN_MISSED_CUT = new Set(["DeChambeau", "Bhatia", "MacIntyre", "Hojgaard"]);
+const KNOWN_MISSED_CUT = new Set(["DeChambeau", "Bhatia", "MacIntyre", "Hojgaard", "Lee"]);
 
 // Players who didn't start the tournament at all (not in field, withdrew, etc.)
 // These render with the same greyed-out treatment as MC, but show "—" instead
 // of a score and a "WD" chip instead of "MC".
 const KNOWN_NOT_IN_FIELD = new Set(["Zalatoris"]);
+
+// =============================================================================
+// PRIZE MONEY
+// =============================================================================
+// 2025 Masters payout table ($21M purse, 20% to winner). The 2026 official
+// purse is announced after the 36-hole cut on Friday — using 2025 numbers as
+// fallback since the percentage structure is stable year to year.
+// Index 0 unused; positions are 1-indexed.
+const PRIZE_MONEY = [
+  0,
+  4200000, 2268000, 1428000, 1008000,  840000,  // 1-5
+   756000,  703500,  651000,  609000,  567000,  // 6-10
+   525000,  483000,  441000,  409500,  378000,  // 11-15
+   346500,  315000,  283500,  257250,  231000,  // 16-20
+   210000,  193200,  176400,  163800,  155400,  // 21-25
+   147000,  140700,  134400,  128100,  121800,  // 26-30
+   115500,  109200,  102900,   96600,   91350,  // 31-35
+    86100,   81900,   77700,   74550,   71400,  // 36-40
+    68250,   65100,   61950,   58800,   56700,  // 41-45
+    54600,   52500,   51450,   50400,   49350   // 46-50
+];
+
+// Pros who miss the cut still get $25K. Amateurs get nothing. Players who
+// withdrew or weren't in the field get nothing.
+const MC_PRIZE = 25000;
+
+function getPrizeForPosition(pos) {
+  if (pos < 1) return 0;
+  if (pos > 50) return PRIZE_MONEY[50];  // tail of field
+  return PRIZE_MONEY[pos];
+}
+
+// Compute positions and prize money for an entire field, handling ties by
+// splitting combined dollar amounts (per Masters payout rules).
+// Input:  array of {name, score, missedCut?, notInField?}
+// Output: map name → {position: "T4", prizeMoney: 868000}
+function computePositionsAndPrizes(field) {
+  const result = {};
+  const active = field.filter(p => !p.missedCut && !p.notInField);
+  const mc     = field.filter(p =>  p.missedCut);
+  const wd     = field.filter(p =>  p.notInField);
+
+  active.sort((a, b) => a.score - b.score);
+
+  let i = 0;
+  while (i < active.length) {
+    let j = i;
+    while (j < active.length && active[j].score === active[i].score) j++;
+    const groupSize = j - i;
+    const startPos = i + 1;
+    const positionStr = groupSize > 1 ? `T${startPos}` : `${startPos}`;
+
+    let totalPrize = 0;
+    for (let k = 0; k < groupSize; k++) {
+      totalPrize += getPrizeForPosition(startPos + k);
+    }
+    const prizePerPlayer = Math.round(totalPrize / groupSize);
+
+    for (let k = i; k < j; k++) {
+      result[active[k].name] = { position: positionStr, prizeMoney: prizePerPlayer };
+    }
+    i = j;
+  }
+
+  for (const p of mc) result[p.name] = { position: "MC", prizeMoney: MC_PRIZE };
+  for (const p of wd) result[p.name] = { position: "WD", prizeMoney: 0 };
+  return result;
+}
+
+// Format prize money compactly for the Total column ($X.XM, $XXXK)
+function formatPrizeCompact(amount) {
+  if (amount === null || amount === undefined) return "—";
+  if (amount === 0) return "$0";
+  if (amount >= 1000000) {
+    const m = amount / 1000000;
+    return "$" + m.toFixed(2).replace(/\.?0+$/, "") + "M";
+  }
+  if (amount >= 1000) {
+    return "$" + Math.round(amount / 1000) + "K";
+  }
+  return "$" + amount.toLocaleString("en-US");
+}
+
+// Format prize money in full for pick cells
+function formatPrizeFull(amount) {
+  if (amount === null || amount === undefined) return "—";
+  if (amount === 0) return "—";
+  return "$" + amount.toLocaleString("en-US");
+}
 
 let playerScores = { ...FALLBACK_SCORES }; // Start with fallback so page renders immediately
 let tournamentStatus = "unknown";
@@ -383,18 +495,23 @@ function getScheduledRound() {
 }
 let rawStatusDetail = ""; // Raw ESPN status string for badge display
 
-// Full tournament leaderboard (independent of pool picks) — top 10 for the leaderboard widget
+// Full tournament leaderboard (independent of pool picks) — top 10 for the
+// leaderboard widget. Prize money is hand-computed for known tie groups:
+//   1st = $4.2M solo
+//   T2 (2 players: Burns, Reed) = ($2.268M + $1.428M) / 2 = $1.848M each
+//   T4 (3 players: Rose, Lowry, Fleetwood) = ($1.008M + $840K + $756K) / 3 = $868K each
+//   T7 (6 players: Clark, Hatton, Li, Reitan, Day, Young) = sum/6 = $589,750 each
 const FALLBACK_LEADERBOARD = [
-  { name: "Rory McIlroy",       score: -12, thru: "F", playerState: "post" },
-  { name: "Sam Burns",          score:  -6, thru: "F", playerState: "post" },
-  { name: "Patrick Reed",       score:  -6, thru: "F", playerState: "post" },
-  { name: "Justin Rose",        score:  -5, thru: "F", playerState: "post" },
-  { name: "Shane Lowry",        score:  -5, thru: "F", playerState: "post" },
-  { name: "Tommy Fleetwood",    score:  -5, thru: "F", playerState: "post" },
-  { name: "Wyndham Clark",      score:  -4, thru: "F", playerState: "post" },
-  { name: "Tyrrell Hatton",     score:  -4, thru: "F", playerState: "post" },
-  { name: "Haotong Li",         score:  -4, thru: "F", playerState: "post" },
-  { name: "Jason Day",          score:  -4, thru: "F", playerState: "post" }
+  { name: "Rory McIlroy",    score: -12, thru: "F", playerState: "post", position: "1",  prizeMoney: 4200000 },
+  { name: "Sam Burns",       score:  -6, thru: "F", playerState: "post", position: "T2", prizeMoney: 1848000 },
+  { name: "Patrick Reed",    score:  -6, thru: "F", playerState: "post", position: "T2", prizeMoney: 1848000 },
+  { name: "Justin Rose",     score:  -5, thru: "F", playerState: "post", position: "T4", prizeMoney:  868000 },
+  { name: "Shane Lowry",     score:  -5, thru: "F", playerState: "post", position: "T4", prizeMoney:  868000 },
+  { name: "Tommy Fleetwood", score:  -5, thru: "F", playerState: "post", position: "T4", prizeMoney:  868000 },
+  { name: "Wyndham Clark",   score:  -4, thru: "F", playerState: "post", position: "T7", prizeMoney:  589750 },
+  { name: "Tyrrell Hatton",  score:  -4, thru: "F", playerState: "post", position: "T7", prizeMoney:  589750 },
+  { name: "Haotong Li",      score:  -4, thru: "F", playerState: "post", position: "T7", prizeMoney:  589750 },
+  { name: "Jason Day",       score:  -4, thru: "F", playerState: "post", position: "T7", prizeMoney:  589750 }
 ];
 let fullLeaderboard = [...FALLBACK_LEADERBOARD];
 
@@ -780,6 +897,48 @@ async function fetchScores() {
     newLeaderboard.sort((a, b) => a.score - b.score);
     fullLeaderboard = newLeaderboard;
 
+    // Compute positions and prize money from the full ESPN field. We pass
+    // ESPN-display names through here, then map back to short names below.
+    const liveField = newLeaderboard.map(p => {
+      const shortName = matchPlayer(p.name);
+      return {
+        name: p.name,
+        score: p.score,
+        missedCut: shortName ? KNOWN_MISSED_CUT.has(shortName) : false,
+        notInField: false
+      };
+    });
+    // Append known not-in-field players that ESPN won't return
+    for (const sn of KNOWN_NOT_IN_FIELD) {
+      liveField.push({ name: sn, score: 0, missedCut: false, notInField: true });
+    }
+    const livePrizes = computePositionsAndPrizes(liveField);
+
+    // Merge prize/position data into newScores using ESPN display name as key
+    for (const p of newLeaderboard) {
+      const prize = livePrizes[p.name];
+      if (prize) {
+        // Annotate the leaderboard entry itself for the top-10 widget
+        p.position = prize.position;
+        p.prizeMoney = prize.prizeMoney;
+      }
+      const shortName = matchPlayer(p.name);
+      if (!shortName || !newScores[shortName]) continue;
+      if (prize) {
+        newScores[shortName].position = prize.position;
+        newScores[shortName].prizeMoney = prize.prizeMoney;
+      }
+    }
+    // Handle not-in-field players (Zalatoris) — they aren't in newScores from
+    // the loop, but their data flows through from FALLBACK_SCORES on merge.
+    for (const sn of KNOWN_NOT_IN_FIELD) {
+      const prize = livePrizes[sn];
+      if (prize && newScores[sn] === undefined) {
+        // Don't override if already set; this is just for awareness. The
+        // FALLBACK_SCORES entry already has position WD and prizeMoney 0.
+      }
+    }
+
     // Merge: live data overrides fallback, but keep fallback for unmatched players
     playerScores = { ...FALLBACK_SCORES, ...newScores };
     usingFallback = false;
@@ -835,6 +994,7 @@ function renderLeaderboard() {
     <span class="player">Player</span>
     <span class="thru-info">Thru</span>
     <span class="sc">Score</span>
+    <span class="prize">Prize</span>
   </div>`;
   let positions = [];
   top10.forEach((p, idx) => {
@@ -894,11 +1054,13 @@ function renderLeaderboard() {
       + " selectable"
       + (isSelected ? " selected" : "");
     const dataAttrs = ` data-short="${selectionKey.replace(/"/g, "&quot;")}" data-full="${p.name.replace(/"/g, "&quot;")}"`;
+    const prizeStr = p.prizeMoney !== undefined ? formatPrizeCompact(p.prizeMoney) : "";
     html += `<div class="${rowCls}"${dataAttrs}>
       <span class="pos">${prefix}${pos}</span>
       <span class="player">${nameDecoration}${p.name}${tailPill}</span>
       <span class="thru-info">${thruStr}</span>
       <span class="sc ${cls}">${formatScore(p.score)}</span>
+      <span class="prize">${prizeStr}</span>
     </div>`;
   });
 
@@ -1056,45 +1218,55 @@ function updateSelectionBanner() {
 function renderStandings() {
   // Calculate totals
   const standings = ENTRIES.map(entry => {
-    let total = 0;
+    let totalStrokes = 0;
+    let totalPrize = 0;
     let allKnown = true;
     let activeCount = 0;
     const pickScores = entry.picks.map(p => {
       const data = playerScores[p];
       if (!data) {
         allKnown = false;
-        return { name: p, score: null, thru: "", playerState: "", missedCut: false, notInField: false };
+        return { name: p, score: null, thru: "", playerState: "", missedCut: false, notInField: false, position: "", prizeMoney: 0 };
       }
-      total += data.score;
+      totalStrokes += data.score;
+      totalPrize += (data.prizeMoney || 0);
       const mc = !!data.missedCut;
       const nif = !!data.notInField;
       if (!mc && !nif) activeCount++;
-      return { name: p, score: data.score, thru: data.thru || "", playerState: data.playerState || "", missedCut: mc, notInField: nif };
+      return {
+        name: p,
+        score: data.score,
+        thru: data.thru || "",
+        playerState: data.playerState || "",
+        missedCut: mc,
+        notInField: nif,
+        position: data.position || "",
+        prizeMoney: data.prizeMoney || 0
+      };
     });
-    // Get alternate's score for tiebreaking (null if not in our data)
+    // Get alternate's data (used as tiebreaker on prize money)
     const altData = playerScores[entry.alt];
     const altScore = altData ? altData.score : null;
     const altThru = altData ? (altData.thru || "") : "";
     const altState = altData ? (altData.playerState || "") : "";
     const altMC = altData ? !!altData.missedCut : false;
     const altNIF = altData ? !!altData.notInField : false;
-    return { ...entry, pickScores, total, altScore, altThru, altState, altMC, altNIF, activeCount, allKnown };
+    const altPosition = altData ? (altData.position || "") : "";
+    const altPrize = altData ? (altData.prizeMoney || 0) : 0;
+    return { ...entry, pickScores, totalStrokes, totalPrize, altScore, altThru, altState, altMC, altNIF, altPosition, altPrize, activeCount, allKnown };
   });
 
-  // Sort: primary by total, secondary by alt score (null sorts last)
+  // Sort by prize money DESC (more money = better rank).
+  // Tiebreaker: alt's prize money DESC.
   standings.sort((a, b) => {
-    if (a.total !== b.total) return a.total - b.total;
-    // Tiebreaker: lower alt score wins; null alts sort to the end
-    if (a.altScore === null && b.altScore === null) return 0;
-    if (a.altScore === null) return 1;
-    if (b.altScore === null) return -1;
-    return a.altScore - b.altScore;
+    if (a.totalPrize !== b.totalPrize) return b.totalPrize - a.totalPrize;
+    return b.altPrize - a.altPrize;
   });
 
-  // Assign ranks — only mark as tied if BOTH total AND alt score match
+  // Assign ranks — only mark as tied if BOTH total prize AND alt prize match
   standings.forEach((entry, idx) => {
     const prev = idx > 0 ? standings[idx - 1] : null;
-    const isTrueTie = prev && prev.total === entry.total && prev.altScore === entry.altScore;
+    const isTrueTie = prev && prev.totalPrize === entry.totalPrize && prev.altPrize === entry.altPrize;
     if (isTrueTie) {
       entry.rank = prev.rank;
       entry.rankDisplay = "T" + entry.rank;
@@ -1122,11 +1294,10 @@ function renderStandings() {
     html += `<td class="rank ${rankClass}">${entry.rankDisplay}</td>`;
     html += `<td class="name">${entry.name}</td>`;
 
-    const totalClass = getScoreClass(entry.total);
-    html += `<td class="total ${totalClass}">${formatScore(entry.total)}</td>`;
+    // Total = combined prize money for all 4 primary picks
+    html += `<td class="total prize-total">${formatPrizeCompact(entry.totalPrize)}</td>`;
 
     // Active picks (X/4) — number of picks not yet eliminated by missed cut.
-    // The "low" class fires when 2 or more picks are dead — visual warning.
     const totalPicks = entry.picks.length;
     const activeClass = "active-count"
       + (entry.activeCount === totalPicks ? " active-full" : "")
@@ -1136,24 +1307,48 @@ function renderStandings() {
 
     entry.pickScores.forEach(ps => {
       const cls = ps.score === null ? "unknown" : getScoreClass(ps.score);
-      let scoreStr;
-      if (ps.score === null) scoreStr = "?";
-      else if (ps.notInField) scoreStr = "—";
-      else scoreStr = formatScore(ps.score);
+      let scoreDisplay;
+      if (ps.score === null) scoreDisplay = "?";
+      else if (ps.notInField) scoreDisplay = "—";
+      else scoreDisplay = formatScore(ps.score);
       const chip = renderStatusChip(ps.playerState, ps.thru, ps.missedCut, ps.notInField);
       const pickCls = "pick" + (ps.missedCut || ps.notInField ? " is-mc" : "");
-      html += `<td class="${pickCls}" data-pick="${ps.name}"><span class="player-name">${ps.name}</span><span class="score ${cls}">${scoreStr}</span>${chip}</td>`;
+      const posLabel = ps.position || (ps.missedCut ? "MC" : ps.notInField ? "WD" : "");
+      const prizeStr = ps.notInField ? "—" : formatPrizeCompact(ps.prizeMoney);
+      html += `<td class="${pickCls}" data-pick="${ps.name}">`
+        +   `<div class="pick-line1">`
+        +     (posLabel ? `<span class="pos-label">${posLabel}</span>` : "")
+        +     `<span class="player-name">${ps.name}</span>`
+        +   `</div>`
+        +   `<span class="pick-score ${cls}">${scoreDisplay}</span>`
+        +   `<div class="pick-line3">`
+        +     `<span class="pick-prize">${prizeStr}</span>`
+        +     chip
+        +   `</div>`
+        + `</td>`;
     });
 
-    // Alternate with score (used as tiebreaker)
+    // Alternate cell — same 3-row structure, slightly smaller
     const altCls = entry.altScore === null ? "unknown" : getScoreClass(entry.altScore);
-    let altScoreStr;
-    if (entry.altScore === null) altScoreStr = "?";
-    else if (entry.altNIF) altScoreStr = "—";
-    else altScoreStr = formatScore(entry.altScore);
+    let altScoreDisplay;
+    if (entry.altScore === null) altScoreDisplay = "?";
+    else if (entry.altNIF) altScoreDisplay = "—";
+    else altScoreDisplay = formatScore(entry.altScore);
     const altChip = renderStatusChip(entry.altState, entry.altThru, entry.altMC, entry.altNIF);
-    const altTdCls = "alternate" + (entry.altMC || entry.altNIF ? " is-mc" : "");
-    html += `<td class="${altTdCls}" data-pick="${entry.alt}"><span class="player-name">${entry.alt}</span><span class="score ${altCls}" style="font-size:.75rem">${altScoreStr}</span>${altChip}</td>`;
+    const altTdCls = "alternate pick" + (entry.altMC || entry.altNIF ? " is-mc" : "");
+    const altPosLabel = entry.altPosition || (entry.altMC ? "MC" : entry.altNIF ? "WD" : "");
+    const altPrizeStr = entry.altNIF ? "—" : formatPrizeCompact(entry.altPrize);
+    html += `<td class="${altTdCls}" data-pick="${entry.alt}">`
+      +   `<div class="pick-line1">`
+      +     (altPosLabel ? `<span class="pos-label">${altPosLabel}</span>` : "")
+      +     `<span class="player-name">${entry.alt}</span>`
+      +   `</div>`
+      +   `<span class="pick-score ${altCls}">${altScoreDisplay}</span>`
+      +   `<div class="pick-line3">`
+      +     `<span class="pick-prize">${altPrizeStr}</span>`
+      +     altChip
+      +   `</div>`
+      + `</td>`;
     html += `</tr>`;
   });
 
@@ -1195,12 +1390,12 @@ function renderAnalysis(standings) {
   const worst = picksWithScores[picksWithScores.length - 1];
 
   let html = `<div class="stats-grid">`;
-  html += `<div class="stat-card"><div class="label">Pool Leader</div><div class="value">${standings[0].name}</div><div class="detail">${formatScore(standings[0].total)} combined</div></div>`;
+  html += `<div class="stat-card"><div class="label">Pool Leader</div><div class="value">${standings[0].name}</div><div class="detail">${formatPrizeCompact(standings[0].totalPrize)} projected</div></div>`;
   html += `<div class="stat-card"><div class="label">Most Popular Pick</div><div class="value">${getFullName(mostPicked[0][0])}</div><div class="detail">${mostPicked[0][1]} of 33 entries (${Math.round(mostPicked[0][1]/33*100)}%)</div></div>`;
   if (best) html += `<div class="stat-card"><div class="label">Best Scoring Pick</div><div class="value">${getFullName(best[0])}</div><div class="detail">${formatScore(best[1].score)} — in ${pickCounts[best[0]]} entries</div></div>`;
   if (worst) html += `<div class="stat-card"><div class="label">Worst Scoring Pick</div><div class="value">${getFullName(worst[0])}</div><div class="detail">${formatScore(worst[1].score)} — in ${pickCounts[worst[0]]} entries</div></div>`;
-  html += `<div class="stat-card"><div class="label">Entries In The Red</div><div class="value">${standings.filter(s => s.total < 0).length} of 33</div><div class="detail">Combined score under par</div></div>`;
-  html += `<div class="stat-card"><div class="label">Tightest Gap</div><div class="value">${formatScore(standings[0].total)} to ${formatScore(standings[standings.length-1].total)}</div><div class="detail">1st place to last</div></div>`;
+  html += `<div class="stat-card"><div class="label">Pool Spread</div><div class="value">${formatPrizeCompact(standings[0].totalPrize)} → ${formatPrizeCompact(standings[standings.length-1].totalPrize)}</div><div class="detail">1st place to last</div></div>`;
+  html += `<div class="stat-card"><div class="label">Total at Stake</div><div class="value">${formatPrizeCompact(standings.reduce((s,e) => s + e.totalPrize, 0))}</div><div class="detail">Combined across all 33 entries</div></div>`;
   html += `</div>`;
 
   content.innerHTML = html;
