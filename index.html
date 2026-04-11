@@ -25,7 +25,7 @@
   thead th{background:var(--green);color:#fff;font-weight:700;text-align:left;padding:10px 10px;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
   thead th.center{text-align:center}
   tbody tr{cursor:pointer;transition:background .15s ease}
-  tbody td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+  tbody td{padding:14px 10px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
   tbody td.name{white-space:normal}
   tbody tr:nth-child(even){background:var(--row-alt)}
   tbody tr:hover{background:#eef7f1!important}
@@ -40,7 +40,7 @@
   .pick{font-size:.78rem;text-align:center;padding:6px 4px;line-height:1.2}
   .pick .pick-line1{line-height:1.15;display:block}
   .pick .pos-label{font-weight:400;color:var(--muted);font-size:.68rem;margin-right:2px;font-variant-numeric:tabular-nums}
-  .pick .player-name{font-weight:700;color:#222;font-size:.8rem;letter-spacing:-.1px}
+  .pick .player-name{font-weight:700;color:#4a4a4a;font-size:.8rem;letter-spacing:-.1px}
   .pick .pick-score{display:block;font-weight:800;font-size:.95rem;margin:2px 0 1px;font-variant-numeric:tabular-nums;line-height:1.1}
   .pick .pick-score.under{color:var(--good)}
   .pick .pick-score.over{color:var(--red)}
@@ -57,7 +57,7 @@
   .status-chip.chip-live{background:rgba(220,53,69,.12);color:#c62233;animation:chipPulse 1.8s ease-in-out infinite}
   .status-chip.chip-final{background:rgba(40,120,60,.12);color:#286e3e}
   .status-chip.chip-pre{background:rgba(0,0,0,.06);color:var(--muted)}
-  .status-chip.chip-mc{background:#5a5a5a;color:#fff;letter-spacing:.5px}
+  .status-chip.chip-mc{background:#b8b8b8;color:#fff;letter-spacing:.5px}
   @keyframes chipPulse{0%,100%{opacity:1}50%{opacity:.55}}
 
   /* Missed-cut treatment: dim the player name and strike it through, dim everything else */
@@ -90,6 +90,26 @@
   .legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
   .payout-note{background:#fffbe6;border-left:4px solid var(--gold);padding:12px 14px;margin:14px 0 18px;font-size:.82rem;border-radius:3px;color:var(--dark);line-height:1.5}
   .payout-note strong{color:var(--green-dark)}
+  .welcome-banner{background:linear-gradient(135deg,#fdfaf0 0%,#fef7e3 100%);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:6px;padding:18px 22px;margin:14px 0 20px;line-height:1.55;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  .welcome-banner h2{font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--green-dark);margin:0 0 8px;font-weight:700;letter-spacing:-.3px}
+  .welcome-banner p{margin:0;font-size:.92rem;color:#3a3a3a}
+  .welcome-banner strong{color:var(--green-dark)}
+  @media(max-width:600px){.welcome-banner{padding:14px 16px}.welcome-banner h2{font-size:1.15rem}.welcome-banner p{font-size:.85rem}}
+
+  /* First-visit disclaimer modal */
+  .disclaimer-overlay{position:fixed;inset:0;background:rgba(20,30,25,.78);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;animation:fadeIn .25s ease-out}
+  .disclaimer-modal{background:var(--cream);border-radius:10px;max-width:520px;width:100%;padding:28px 30px;box-shadow:0 10px 40px rgba(0,0,0,.3);border-top:5px solid var(--green);max-height:90vh;overflow-y:auto;animation:slideUp .3s ease-out}
+  .disclaimer-modal h2{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--green-dark);margin:0 0 14px;font-weight:700}
+  .disclaimer-modal p{font-size:.92rem;line-height:1.55;color:var(--dark);margin:0 0 12px}
+  .disclaimer-modal ul{font-size:.88rem;line-height:1.55;color:var(--dark);margin:0 0 16px;padding-left:20px}
+  .disclaimer-modal li{margin-bottom:6px}
+  .disclaimer-modal strong{color:var(--green-dark)}
+  .disclaimer-modal .ack-btn{display:block;width:100%;background:var(--green);color:#fff;border:none;padding:13px 20px;font-family:inherit;font-size:.95rem;font-weight:700;border-radius:6px;cursor:pointer;letter-spacing:.3px;margin-top:18px;transition:background .15s ease}
+  .disclaimer-modal .ack-btn:hover{background:var(--green-dark)}
+  .disclaimer-modal .small{font-size:.78rem;color:var(--muted);font-style:italic;margin-top:14px}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  @media(max-width:600px){.disclaimer-modal{padding:22px 20px}.disclaimer-modal h2{font-size:1.2rem}}
   .leaderboard-mini{background:var(--cream);border:1px solid var(--border);border-radius:5px;padding:12px 14px;margin:14px 0}
   .leaderboard-mini h4{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--green);margin-bottom:8px}
   .lb-row{display:flex;justify-content:space-between;font-size:.82rem;padding:3px 0;border-bottom:1px solid rgba(0,0,0,.05)}
@@ -154,14 +174,36 @@
   .stat-card .value{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--green-dark);line-height:1.2;margin-top:3px}
   .stat-card .detail{font-size:.78rem;color:var(--muted);margin-top:2px}
   .footer{text-align:center;font-size:.72rem;color:var(--muted);margin-top:20px;padding-top:14px;border-top:1px solid var(--border)}
+  .disclaimer-footer{margin-top:32px;padding:14px 18px;font-size:.74rem;line-height:1.55;color:#9a9a9a;font-style:italic;text-align:center;max-width:680px;margin-left:auto;margin-right:auto}
+  .disclaimer-footer p{margin:0 0 8px}
+  .disclaimer-footer p:last-child{margin-bottom:0}
+  .disclaimer-footer strong{color:#7a7a7a;font-style:normal;font-weight:600}
   .footer .version{display:inline-block;margin-top:6px;padding:3px 10px;background:var(--cream);border:1px solid var(--border);border-radius:10px;font-family:'Source Sans 3',monospace;font-size:.7rem;color:var(--green-dark);font-weight:600}
   .feedback-btn{position:fixed;bottom:20px;right:20px;background:#fff;border:1.5px solid var(--green);color:var(--green-dark);padding:10px 18px;border-radius:24px;font-family:'Source Sans 3',sans-serif;font-size:.85rem;font-weight:600;text-decoration:none;box-shadow:0 3px 10px rgba(0,103,71,.18);opacity:.9;transition:all .2s ease;z-index:100;display:inline-flex;align-items:center;gap:7px}
   .feedback-btn:hover{opacity:1;background:var(--green);color:#fff;border-color:var(--green);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,103,71,.28)}
   @media(max-width:600px){.feedback-btn{bottom:10px;right:10px;font-size:.7rem;padding:6px 12px;border-width:1px;opacity:.7;font-weight:500}}
-  @media(max-width:600px){.header h1{font-size:1.5rem}table{font-size:.78rem}tbody td,thead th{padding:7px 6px}.rank{font-size:1rem}.total{font-size:1rem}}
+  @media(max-width:600px){.header h1{font-size:1.5rem}table{font-size:.78rem}tbody td,thead th{padding:12px 6px}.rank{font-size:1rem}.total{font-size:1rem}}
 </style>
 </head>
 <body>
+
+<!-- First-visit disclaimer modal. Hidden by default; shown on page load only
+     if localStorage doesn't have the ack key for this year. The year suffix
+     means each year's pool gets a fresh acknowledgment. -->
+<div id="disclaimerOverlay" class="disclaimer-overlay" style="display:none">
+  <div class="disclaimer-modal" role="dialog" aria-labelledby="disclaimerTitle">
+    <h2 id="disclaimerTitle">Before you dive in 🏌️</h2>
+    <p>Quick heads-up — this is a side project built by someone who's in the pool too, not the official record:</p>
+    <ul>
+      <li>All standings are auto-calculated from ESPN's live data and may have bugs, delays, or outright errors</li>
+      <li><strong>Rob makes all official calls</strong> on rankings, payouts, and tiebreakers when the tournament wraps</li>
+      <li>If something looks wrong, it probably is — use the feedback button at the bottom of the page</li>
+    </ul>
+    <p class="small">Cobbled together with live ESPN data, some questionable AI-assisted coding, and possibly one beer too many. Don't take it too seriously. 🍺</p>
+    <button type="button" class="ack-btn" id="disclaimerAckBtn">I understand — show me the standings</button>
+  </div>
+</div>
+
 <div class="container">
   <div class="header">
     <h1>Scarr Family 2026 Masters Pool <span id="statusBadge" class="badge badge-live">● Loading...</span></h1>
@@ -173,11 +215,9 @@
     <span class="tag" id="refreshTag">Auto-refreshes every 5 min</span>
   </div>
 
-  <div class="payout-note">
-    <div style="font-size:1.08em;line-height:1.5;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-      <strong>New:</strong> Now that the cut is set, standings are calculated by <strong>total prize money earned</strong> instead of strokes-to-par. Missed-cut picks get their $25K cut cheque and nothing more, so a single big finish from one of your players can swing things dramatically. Welcome to the real scoring.
-    </div>
-    <strong>Just for fun — no guarantees.</strong> Official rankings and winners will come from Rob after the tournament wraps. Everything here is cobbled together from ESPN's live data, some questionable AI-assisted coding, and possibly one beer too many. Do your best not to take it too seriously. 🍺
+  <div class="welcome-banner">
+    <h2>Welcome to the weekend, friends. 🌲</h2>
+    <p>Rory's six clear heading into Moving Day, the cut is set, and the pool now scores by <strong>total prize money earned</strong> instead of strokes-to-par. A single big finish can swing things dramatically — and missed-cut picks are frozen at their $25K cut cheque, so they won't move again. May your alts stay irrelevant and your primaries make putts. ⛳</p>
   </div>
 
   <div id="errorMsg" class="error-msg" style="display:none"></div>
@@ -244,19 +284,24 @@
     <p><strong>Akshay Bhatia — Heartbreak cut.</strong> Hit a gorgeous bunker shot at 17 to nearly hole out, then double-bogeyed 18 to fall to the wrong side of the line. Brutal.</p>
 
     <h4 style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--green-dark);margin-top:14px;margin-bottom:6px">🎯 The Pool Story</h4>
-    <p><strong>Debby Chan is leading the pool at $6.07M</strong> with the dream lineup: Aberg + Fleetwood + McIlroy + Rose. Three of her four picks sit in the top 6 on the Masters leaderboard, and she's the only entry combining McIlroy with both Fleetwood AND Rose. Her ~$560K cushion over 2nd place is built on a card where every pick made the cut — no dead weight, no MC frozen at $25K, no tiebreaker anxiety.</p>
-    <p><strong>Cody Pantages sits 2nd at $5.51M</strong> with McIlroy + Rose + Schauffele + Scheffler. On paper this looks elite, but Schauffele only finished at -2 after bogeying Amen Corner (11–12–13), and Scheffler had the worst day of any made-cut pick (E, after a second-round 74). Those two underperforming prize slots — Schauffele buried in a 4-way tie at T16 and Scheffler stuck in a brutal 8-way tie at T24 — are why he's $560K behind Debby instead of pressuring her at the top.</p>
-    <p><strong>The "McIlroy gravity" effect reshaped the top 10.</strong> McIlroy's prize of $4.2M is worth <em>2.3× the T2 prize</em> of $1.85M — an enormous gap that pulls any entry containing him straight into the money. The casualty: <strong>Mike Scarr</strong>, whose contrarian Reed + Rose + Schauffele + Scheffler stack had him solo 6th under strokes scoring, now drops out of the top 10 entirely at ~$3.15M. Reed at T2 is excellent, but "excellent" isn't "$4.2M excellent." Meanwhile <strong>Scarr Don, Forbes Heather, Pearce Barb, Maitland Anthony, and Thomas Paul</strong> all jumped into the top 10 purely on the strength of McIlroy as a primary.</p>
-    <p><strong>Rob Forbes's McIlroy-as-alt decision is now catastrophic.</strong> His four primaries (Aberg + Fleetwood + Schauffele + Young) are all alive and well, but under prize-money scoring the gap between McIlroy-as-primary ($4.2M) and McIlroy-as-alt ($0 contribution, pure tiebreaker) is the single biggest swing in the pool. Had he swapped any primary for McIlroy, he'd be pushing Debby for first. Instead he's outside the top 10 at ~$1.90M — and his $4.2M alt is the cruelest tiebreaker edge that will never be used.</p>
-    <p><strong>Pearce Barb is top 10 at $4.73M despite losing DeChambeau to the cut.</strong> Her card — DeChambeau ($25K frozen) + Fitzpatrick ($203K) + McIlroy ($4.2M) + Schauffele ($301K) — shows the inversion this year's scoring has produced: McIlroy alone covers 89% of her total, and the MC'd DeChambeau barely dents her position. Under strokes scoring, a MC was a +5 anchor that sank you; under prize money, it's a $25K floor you hardly notice when your other picks are earning millions.</p>
-    <p><strong>Scarr Ben is now dead last at $416K.</strong> His lineup — Aberg + DeChambeau + Fitzpatrick + Rahm — got hit twice: DeChambeau MC'd at $25K, and Rahm finished at +4 stuck in a brutal 8-way tie at T47 earning just $50K. Aberg ($138K, buried in that 8-way T24) and Fitzpatrick ($203K) can't drag him out of the basement. Interestingly, <strong>Colin Ball</strong> — who was dead last under strokes scoring with his 2/4 active card (Bhatia and MacIntyre both MC) — is actually <em>ahead</em> of Ben here at ~$970K, entirely because Fleetwood at $868K is doing 90% of Colin's work single-handedly.</p>
+    <p><strong>Debby Chan is leading the pool at $6.53M</strong> with the dream lineup: Aberg + Fleetwood + McIlroy + Rose. Three of her four picks sit in the top 6 on the Masters leaderboard, and she's the only entry combining McIlroy with both Fleetwood AND Rose. Her ~$580K cushion over 2nd place is built on a card where every pick made the cut — no dead weight, no MC frozen at $25K, no tiebreaker anxiety.</p>
+    <p><strong>Cody Pantages sits 2nd at $5.95M</strong> with McIlroy + Rose + Schauffele + Scheffler. On paper this looks elite, but Schauffele only finished at -2 after bogeying Amen Corner (11–12–13), and Scheffler had the worst day of any made-cut pick (E, after a second-round 74). Those two underperforming prize slots — Schauffele buried in a 4-way tie at T16 and Scheffler stuck in a brutal 8-way tie at T24 — are why he's $580K behind Debby instead of pressuring her at the top.</p>
+    <p><strong>The "McIlroy gravity" effect reshaped the top 10.</strong> McIlroy's prize of $4.5M is worth <em>2.3× the T2 prize</em> of $1.98M — an enormous gap that pulls any entry containing him straight into the money. The casualty: <strong>Mike Scarr</strong>, whose contrarian Reed + Rose + Schauffele + Scheffler stack had him solo 6th under strokes scoring, now drops out of the top 10 entirely at ~$3.43M. Reed at T2 is excellent, but "excellent" isn't "$4.5M excellent." Meanwhile <strong>Scarr Don, Forbes Heather, Pearce Barb, Maitland Anthony, and Thomas Paul</strong> all jumped into the top 10 purely on the strength of McIlroy as a primary.</p>
+    <p><strong>Rob Forbes's McIlroy-as-alt decision is now catastrophic.</strong> His four primaries (Aberg + Fleetwood + Schauffele + Young) are all alive and well, but under prize-money scoring the gap between McIlroy-as-primary ($4.5M) and McIlroy-as-alt ($0 contribution, pure tiebreaker) is the single biggest swing in the pool. Had he swapped any primary for McIlroy, he'd be pushing Debby for first. Instead he's outside the top 10 at ~$2.08M — and his $4.5M alt is the cruelest tiebreaker edge that will never be used.</p>
+    <p><strong>Pearce Barb is top 10 at $5.14M despite losing DeChambeau to the cut.</strong> Her card — DeChambeau ($25K frozen) + Fitzpatrick ($262K) + McIlroy ($4.5M) + Schauffele ($349K) — shows the inversion this year's scoring has produced: McIlroy alone covers 88% of her total, and the MC'd DeChambeau barely dents her position. Under strokes scoring, a MC was a +5 anchor that sank you; under prize money, it's a $25K floor you hardly notice when your other picks are earning millions.</p>
+    <p><strong>Scarr Ben is now dead last at $519K.</strong> His lineup — Aberg + DeChambeau + Fitzpatrick + Rahm — got hit twice: DeChambeau MC'd at $25K, and Rahm finished at +4 stuck in a brutal 8-way tie at T47 earning just $58K. Aberg ($174K, buried in that 8-way T24) and Fitzpatrick ($262K) can't drag him out of the basement. Interestingly, <strong>Colin Ball</strong> — who was dead last under strokes scoring with his 2/4 active card (Bhatia and MacIntyre both MC) — is actually <em>ahead</em> of Ben here at ~$1.04M, entirely because Fleetwood at $930K is doing 90% of Colin's work single-handedly.</p>
+  </div>
+
+  <div class="disclaimer-footer">
+    <p>This is a side project built by someone who's in the pool too — not the official record. All standings are auto-calculated from ESPN's live data and may have bugs, delays, or outright errors. <strong>Rob makes all official calls</strong> on rankings, payouts, and tiebreakers when the tournament wraps. If something looks wrong, it probably is — use the feedback button below.</p>
+    <p>Cobbled together with live ESPN data, some questionable AI-assisted coding, and possibly one beer too many. Don't take it too seriously. 🍺</p>
   </div>
 
   <div class="footer">
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 45 &bull; Built with Claude</span>
+    <span class="version">App version 49 &bull; Built with Claude</span>
   </div>
 
   <!-- Prize reconciliation panel (debug tool) — populated by loadLiveScores.
@@ -367,33 +412,32 @@ const CUT_LINE = 4; // 2026 Masters cut line: +4
 // proportionally.
 const FALLBACK_SCORES = {
   // Positions and prizeMoney below reflect the FULL 50+ player Masters field
-  // (not just pool picks). Tie-group sizes are taken from the live ESPN
-  // reconciliation after Day 2 — e.g. T24 at even par actually has 8 players,
-  // so Aberg and Scheffler each get $138K instead of the ~$244K they'd get
-  // in a smaller tie. The reconciliation panel at the bottom of the page will
-  // flag any drift if these fall out of sync with live data again.
-  "Aberg":     { score:  0, thru: "F", position: "T24", prizeMoney: 138338,  source: "day2", missedCut: false },
+  // using the confirmed 2026 purse ($22.5M, winner $4.5M). Tie-group sizes
+  // taken from the live ESPN reconciliation after Day 2. The reconciliation
+  // panel at the bottom of the page will flag any drift if these fall out of
+  // sync with live data.
+  "Aberg":     { score:  0, thru: "F", position: "T24", prizeMoney: 174094,  source: "day2", missedCut: false },
   "Bhatia":    { score:  6, thru: "F", position: "MC",  prizeMoney:  25000,  source: "day2", missedCut: true  },
-  "Conners":   { score:  4, thru: "F", position: "T47", prizeMoney:  50138,  source: "day2", missedCut: false },
+  "Conners":   { score:  4, thru: "F", position: "T47", prizeMoney:  57938,  source: "day2", missedCut: false },
   "DeChambeau":{ score:  5, thru: "F", position: "MC",  prizeMoney:  25000,  source: "day2", missedCut: true  },
-  "Fitzpatrick":{score: -1, thru: "F", position: "T20", prizeMoney: 202650,  source: "day2", missedCut: false },
-  "Fleetwood": { score: -5, thru: "F", position: "T4",  prizeMoney: 868000,  source: "day2", missedCut: false },
-  "Gotterup":  { score: -3, thru: "F", position: "T13", prizeMoney: 409500,  source: "day2", missedCut: false },
+  "Fitzpatrick":{score: -1, thru: "F", position: "T20", prizeMoney: 262125,  source: "day2", missedCut: false },
+  "Fleetwood": { score: -5, thru: "F", position: "T4",  prizeMoney: 930000,  source: "day2", missedCut: false },
+  "Gotterup":  { score: -3, thru: "F", position: "T13", prizeMoney: 435000,  source: "day2", missedCut: false },
   "Hojgaard":  { score:  6, thru: "F", position: "MC",  prizeMoney:  25000,  source: "day2", missedCut: true  },
-  "Hovland":   { score:  2, thru: "F", position: "T39", prizeMoney:  66675,  source: "day2", missedCut: false },
-  "Kim":       { score:  4, thru: "F", position: "T47", prizeMoney:  50138,  source: "day2", missedCut: false },
-  "Koepka":    { score: -3, thru: "F", position: "T13", prizeMoney: 409500,  source: "day2", missedCut: false },
+  "Hovland":   { score:  2, thru: "F", position: "T39", prizeMoney:  90000,  source: "day2", missedCut: false },
+  "Kim":       { score:  4, thru: "F", position: "T47", prizeMoney:  57938,  source: "day2", missedCut: false },
+  "Koepka":    { score: -3, thru: "F", position: "T13", prizeMoney: 435000,  source: "day2", missedCut: false },
   "Lee":       { score:  5, thru: "F", position: "MC",  prizeMoney:  25000,  source: "day2", missedCut: true  },
   "MacIntyre": { score:  7, thru: "F", position: "MC",  prizeMoney:  25000,  source: "day2", missedCut: true  },
-  "Matsuyama": { score: -2, thru: "F", position: "T16", prizeMoney: 300563,  source: "day2", missedCut: false },
-  "McIlroy":   { score:-12, thru: "F", position: "1",   prizeMoney: 4200000, source: "day2", missedCut: false },
-  "Morikawa":  { score: -1, thru: "F", position: "T20", prizeMoney: 202650,  source: "day2", missedCut: false },
-  "Rahm":      { score:  4, thru: "F", position: "T47", prizeMoney:  50138,  source: "day2", missedCut: false },
-  "Reed":      { score: -6, thru: "F", position: "T2",  prizeMoney: 1848000, source: "day2", missedCut: false },
-  "Rose":      { score: -5, thru: "F", position: "T4",  prizeMoney: 868000,  source: "day2", missedCut: false },
-  "Schauffele":{ score: -2, thru: "F", position: "T16", prizeMoney: 300563,  source: "day2", missedCut: false },
-  "Scheffler": { score:  0, thru: "F", position: "T24", prizeMoney: 138338,  source: "day2", missedCut: false },
-  "Young":     { score: -4, thru: "F", position: "T7",  prizeMoney: 589750,  source: "day2", missedCut: false },
+  "Matsuyama": { score: -2, thru: "F", position: "T16", prizeMoney: 348750,  source: "day2", missedCut: false },
+  "McIlroy":   { score:-12, thru: "F", position: "1",   prizeMoney: 4500000, source: "day2", missedCut: false },
+  "Morikawa":  { score: -1, thru: "F", position: "T20", prizeMoney: 262125,  source: "day2", missedCut: false },
+  "Rahm":      { score:  4, thru: "F", position: "T47", prizeMoney:  57938,  source: "day2", missedCut: false },
+  "Reed":      { score: -6, thru: "F", position: "T2",  prizeMoney: 1980000, source: "day2", missedCut: false },
+  "Rose":      { score: -5, thru: "F", position: "T4",  prizeMoney: 930000,  source: "day2", missedCut: false },
+  "Schauffele":{ score: -2, thru: "F", position: "T16", prizeMoney: 348750,  source: "day2", missedCut: false },
+  "Scheffler": { score:  0, thru: "F", position: "T24", prizeMoney: 174094,  source: "day2", missedCut: false },
+  "Young":     { score: -4, thru: "F", position: "T7",  prizeMoney: 631875,  source: "day2", missedCut: false },
   "Zalatoris": { score:  0, thru: "F", position: "WD",  prizeMoney: 0,       source: "day2", missedCut: false, notInField: true }
 };
 
@@ -410,22 +454,22 @@ const KNOWN_NOT_IN_FIELD = new Set(["Zalatoris"]);
 // =============================================================================
 // PRIZE MONEY
 // =============================================================================
-// 2025 Masters payout table ($21M purse, 20% to winner). The 2026 official
-// purse is announced after the 36-hole cut on Friday — using 2025 numbers as
-// fallback since the percentage structure is stable year to year.
-// Index 0 unused; positions are 1-indexed.
+// 2026 Masters payout table — confirmed by PGA Tour ($22.5M total purse,
+// winner gets $4.5M). Index 0 unused; positions are 1-indexed. Past position
+// 50, all remaining made-cut pros get $55,350 down to a smaller tail amount;
+// we use $55,350 as the floor via getPrizeForPosition().
 const PRIZE_MONEY = [
   0,
-  4200000, 2268000, 1428000, 1008000,  840000,  // 1-5
-   756000,  703500,  651000,  609000,  567000,  // 6-10
-   525000,  483000,  441000,  409500,  378000,  // 11-15
-   346500,  315000,  283500,  257250,  231000,  // 16-20
-   210000,  193200,  176400,  163800,  155400,  // 21-25
-   147000,  140700,  134400,  128100,  121800,  // 26-30
-   115500,  109200,  102900,   96600,   91350,  // 31-35
-    86100,   81900,   77700,   74550,   71400,  // 36-40
-    68250,   65100,   61950,   58800,   56700,  // 41-45
-    54600,   52500,   51450,   50400,   49350   // 46-50
+  4500000, 2430000, 1530000, 1080000,  900000,  // 1-5
+   810000,  753750,  697500,  652500,  607500,  // 6-10
+   562500,  517500,  472500,  427500,  405000,  // 11-15
+   382500,  360000,  337500,  315000,  292500,  // 16-20
+   270000,  252000,  234000,  216000,  198000,  // 21-25
+   180000,  173250,  166500,  159750,  153000,  // 26-30
+   146250,  139500,  132750,  127125,  121500,  // 31-35
+   115875,  110250,  105750,  101250,   96750,  // 36-40
+    92250,   87750,   83250,   78750,   74250,  // 41-45
+    69750,   65250,   61650,   58500,   56700   // 46-50
 ];
 
 // Pros who miss the cut still get $25K. Amateurs get nothing. Players who
@@ -480,8 +524,9 @@ function formatPrizeCompact(amount) {
   if (amount === null || amount === undefined) return "—";
   if (amount === 0) return "$0";
   if (amount >= 1000000) {
-    const m = amount / 1000000;
-    return "$" + m.toFixed(2).replace(/\.?0+$/, "") + "M";
+    // Always show 2 decimals so values ending in zeros render filled
+    // (e.g. $4.50M instead of $4.5M, $6.00M instead of $6M).
+    return "$" + (amount / 1000000).toFixed(2) + "M";
   }
   if (amount >= 1000) {
     return "$" + Math.round(amount / 1000) + "K";
@@ -536,22 +581,22 @@ function getScheduledRound() {
 let rawStatusDetail = ""; // Raw ESPN status string for badge display
 
 // Full tournament leaderboard (independent of pool picks) — top 10 for the
-// leaderboard widget. Prize money is hand-computed for known tie groups:
-//   1st = $4.2M solo
-//   T2 (2 players: Burns, Reed) = ($2.268M + $1.428M) / 2 = $1.848M each
-//   T4 (3 players: Rose, Lowry, Fleetwood) = ($1.008M + $840K + $756K) / 3 = $868K each
-//   T7 (6 players: Clark, Hatton, Li, Reitan, Day, Young) = sum/6 = $589,750 each
+// leaderboard widget. Prize money uses confirmed 2026 purse ($22.5M):
+//   1st = $4.5M solo
+//   T2 (2 players: Burns, Reed) = ($2.43M + $1.53M) / 2 = $1.98M each
+//   T4 (3 players: Rose, Lowry, Fleetwood) = ($1.08M + $900K + $810K) / 3 = $930K each
+//   T7 (6 players: Clark, Hatton, Li, Reitan, Day, Young) = sum/6 = $631,875 each
 const FALLBACK_LEADERBOARD = [
-  { name: "Rory McIlroy",    score: -12, thru: "F", playerState: "post", position: "1",  prizeMoney: 4200000 },
-  { name: "Sam Burns",       score:  -6, thru: "F", playerState: "post", position: "T2", prizeMoney: 1848000 },
-  { name: "Patrick Reed",    score:  -6, thru: "F", playerState: "post", position: "T2", prizeMoney: 1848000 },
-  { name: "Justin Rose",     score:  -5, thru: "F", playerState: "post", position: "T4", prizeMoney:  868000 },
-  { name: "Shane Lowry",     score:  -5, thru: "F", playerState: "post", position: "T4", prizeMoney:  868000 },
-  { name: "Tommy Fleetwood", score:  -5, thru: "F", playerState: "post", position: "T4", prizeMoney:  868000 },
-  { name: "Wyndham Clark",   score:  -4, thru: "F", playerState: "post", position: "T7", prizeMoney:  589750 },
-  { name: "Tyrrell Hatton",  score:  -4, thru: "F", playerState: "post", position: "T7", prizeMoney:  589750 },
-  { name: "Haotong Li",      score:  -4, thru: "F", playerState: "post", position: "T7", prizeMoney:  589750 },
-  { name: "Jason Day",       score:  -4, thru: "F", playerState: "post", position: "T7", prizeMoney:  589750 }
+  { name: "Rory McIlroy",    score: -12, thru: "F", playerState: "post", position: "1",  prizeMoney: 4500000 },
+  { name: "Sam Burns",       score:  -6, thru: "F", playerState: "post", position: "T2", prizeMoney: 1980000 },
+  { name: "Patrick Reed",    score:  -6, thru: "F", playerState: "post", position: "T2", prizeMoney: 1980000 },
+  { name: "Justin Rose",     score:  -5, thru: "F", playerState: "post", position: "T4", prizeMoney:  930000 },
+  { name: "Shane Lowry",     score:  -5, thru: "F", playerState: "post", position: "T4", prizeMoney:  930000 },
+  { name: "Tommy Fleetwood", score:  -5, thru: "F", playerState: "post", position: "T4", prizeMoney:  930000 },
+  { name: "Wyndham Clark",   score:  -4, thru: "F", playerState: "post", position: "T7", prizeMoney:  631875 },
+  { name: "Tyrrell Hatton",  score:  -4, thru: "F", playerState: "post", position: "T7", prizeMoney:  631875 },
+  { name: "Haotong Li",      score:  -4, thru: "F", playerState: "post", position: "T7", prizeMoney:  631875 },
+  { name: "Jason Day",       score:  -4, thru: "F", playerState: "post", position: "T7", prizeMoney:  631875 }
 ];
 let fullLeaderboard = [...FALLBACK_LEADERBOARD];
 
@@ -1514,9 +1559,11 @@ function renderStandings() {
 
     entry.pickScores.forEach(ps => {
       const cls = ps.score === null ? "unknown" : getScoreClass(ps.score);
+      // For MC/WD picks, hide the stroke score entirely — the MC/WD chip
+      // already conveys the status, the strikethrough number adds noise.
       let scoreDisplay;
       if (ps.score === null) scoreDisplay = "?";
-      else if (ps.notInField) scoreDisplay = "—";
+      else if (ps.notInField || ps.missedCut) scoreDisplay = "";
       else scoreDisplay = formatScore(ps.score);
       const chip = renderStatusChip(ps.playerState, ps.thru, ps.missedCut, ps.notInField);
       const pickCls = "pick" + (ps.missedCut || ps.notInField ? " is-mc" : "");
@@ -1539,7 +1586,7 @@ function renderStandings() {
     const altCls = entry.altScore === null ? "unknown" : getScoreClass(entry.altScore);
     let altScoreDisplay;
     if (entry.altScore === null) altScoreDisplay = "?";
-    else if (entry.altNIF) altScoreDisplay = "—";
+    else if (entry.altNIF || entry.altMC) altScoreDisplay = "";
     else altScoreDisplay = formatScore(entry.altScore);
     const altChip = renderStatusChip(entry.altState, entry.altThru, entry.altMC, entry.altNIF);
     const altTdCls = "alternate pick" + (entry.altMC || entry.altNIF ? " is-mc" : "");
@@ -1665,6 +1712,33 @@ async function refresh() {
 // ── Init ──
 refresh();
 setInterval(refresh, 5 * 60 * 1000); // Refresh every 5 minutes
+
+// First-visit disclaimer modal. Shown only if localStorage doesn't have the
+// ack key for this year. Year suffix means next year's pool gets a fresh ack.
+// Footer link below also lets users re-open the modal anytime.
+const DISCLAIMER_ACK_KEY = "mastersPoolDisclaimerAck_2026";
+function showDisclaimer() {
+  const overlay = document.getElementById("disclaimerOverlay");
+  if (overlay) overlay.style.display = "flex";
+}
+function hideDisclaimer() {
+  const overlay = document.getElementById("disclaimerOverlay");
+  if (overlay) overlay.style.display = "none";
+}
+try {
+  if (!localStorage.getItem(DISCLAIMER_ACK_KEY)) {
+    showDisclaimer();
+  }
+} catch (e) {
+  // localStorage unavailable (private mode, etc.) — just skip the modal
+}
+const ackBtn = document.getElementById("disclaimerAckBtn");
+if (ackBtn) {
+  ackBtn.addEventListener("click", () => {
+    try { localStorage.setItem(DISCLAIMER_ACK_KEY, new Date().toISOString()); } catch (e) {}
+    hideDisclaimer();
+  });
+}
 
 // Prize reconciliation button — toggles the debug panel at the bottom. The
 // panel content itself is populated by loadLiveScores after each successful
