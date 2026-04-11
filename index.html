@@ -233,7 +233,7 @@
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 34 &bull; Built with Claude</span>
+    <span class="version">App version 35 &bull; Built with Claude</span>
   </div>
 </div>
 
@@ -743,12 +743,26 @@ async function fetchScores() {
     if (espnSaysTournamentComplete) {
       liveState = "TOURNAMENT_COMPLETE";
     } else if (scheduledRound !== null) {
-      // We're on a tournament day. Default to LIVE. ESPN can only downgrade
-      // us to ROUND_COMPLETE if it explicitly says the current round is final.
+      // We're on a tournament day. Decide state from player activity counts
+      // (which we now have reliably from the linescores parser). ESPN's status
+      // string is too unreliable to use as the primary signal.
       if (espnSaysFinal) {
         liveState = "ROUND_COMPLETE";
-      } else {
+      } else if (activelyPlayingCount > 0) {
+        // Someone is currently on the course
         liveState = "LIVE";
+      } else if (finishedCurrentRoundCount > 10 && finishedCurrentRoundCount >= notStartedCurrentRoundCount) {
+        // Nobody currently playing AND most players are done with this round.
+        // Note: MC players from earlier rounds count as "not started" for the
+        // current round (no period:N linescore), so we require finished >=
+        // notStarted to avoid being misled by them.
+        liveState = "ROUND_COMPLETE";
+      } else if (finishedCurrentRoundCount > 0) {
+        // Some have finished but more are still pre-tee — between waves, treat as live
+        liveState = "LIVE";
+      } else {
+        // Nobody has played yet — pre-tee (early morning before first tee times)
+        liveState = "ROUND_PENDING";
       }
     } else if (statusDetail.includes("in progress") || statusDetail.includes("inprogress") ||
                statusName === "status_in_progress" || statusState === "in") {
