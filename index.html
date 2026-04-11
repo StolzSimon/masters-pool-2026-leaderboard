@@ -121,12 +121,16 @@
   .lb-row .sc.over{color:var(--red)}
   .lb-row .sc.even{color:var(--dark)}
   .lb-row .prize{width:58px;text-align:right;font-size:.72rem;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:-.1px;padding-left:6px}
+  .lb-row .picks{width:62px;text-align:right;font-size:.7rem;font-weight:500;color:#5a5a5a;font-variant-numeric:tabular-nums;letter-spacing:-.1px;padding-left:6px;white-space:nowrap}
+  .lb-row .picks .alt{color:#a0a0a0;font-weight:400;font-size:.65rem}
+  .lb-row .picks.empty{color:#c8c8c8;font-weight:400}
   .lb-row .thru-info{font-size:.78rem;color:var(--muted);width:52px;text-align:right;font-variant-numeric:tabular-nums}
   .lb-row .thru-info .flag{font-size:.85rem;margin-right:2px;filter:saturate(1.1)}
   .lb-row.lb-header{font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;padding-bottom:4px;border-bottom:1px solid rgba(0,0,0,.12)}
   .lb-row.lb-header .player{font-weight:700}
   .lb-row.lb-header .sc{color:var(--muted);font-weight:700}
   .lb-row.lb-header .prize{color:var(--muted);font-weight:700}
+  .lb-row.lb-header .picks{color:var(--muted);font-weight:700;font-size:.68rem}
   .lb-row.is-live{background:rgba(220,53,69,.04)}
   .lb-row.selectable{cursor:pointer;transition:background .15s ease,transform .1s ease}
   .lb-row.selectable:hover{background:rgba(0,100,60,.06)}
@@ -301,7 +305,7 @@
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 50 &bull; Built with Claude</span>
+    <span class="version">App version 51 &bull; Built with Claude</span>
   </div>
 
   <!-- Prize reconciliation panel (debug tool) — populated by loadLiveScores.
@@ -1224,6 +1228,21 @@ function renderLeaderboard() {
     return;
   }
 
+  // Compute pick-count map: short name → { primary: N, alt: N }. Counted
+  // once per render across all 33 entries; both numbers shown in the Picks
+  // column so the user can see how concentrated/contrarian a player is.
+  const pickCounts = {};
+  for (const e of ENTRIES) {
+    for (const p of e.picks) {
+      if (!pickCounts[p]) pickCounts[p] = { primary: 0, alt: 0 };
+      pickCounts[p].primary++;
+    }
+    if (e.alt) {
+      if (!pickCounts[e.alt]) pickCounts[e.alt] = { primary: 0, alt: 0 };
+      pickCounts[e.alt].alt++;
+    }
+  }
+
   // Compute positions with ties (T1, T1, T3, etc.)
   let html = `<div class="lb-row lb-header">
     <span class="pos">#</span>
@@ -1231,6 +1250,7 @@ function renderLeaderboard() {
     <span class="thru-info">Thru</span>
     <span class="sc">Score</span>
     <span class="prize">Prize</span>
+    <span class="picks">Picks</span>
   </div>`;
   let positions = [];
   players.forEach((p, idx) => {
@@ -1291,12 +1311,26 @@ function renderLeaderboard() {
       + (isSelected ? " selected" : "");
     const dataAttrs = ` data-short="${selectionKey.replace(/"/g, "&quot;")}" data-full="${p.name.replace(/"/g, "&quot;")}"`;
     const prizeStr = p.prizeMoney !== undefined ? formatPrizeCompact(p.prizeMoney) : "";
+
+    // Picks cell: "18 (+2 alt)" if anyone picked them, faint "—" otherwise.
+    // Only counted when we can match this ESPN player to a pool short name.
+    const counts = shortName ? pickCounts[shortName] : null;
+    let picksHtml;
+    if (!counts || (counts.primary === 0 && counts.alt === 0)) {
+      picksHtml = `<span class="picks empty">—</span>`;
+    } else if (counts.alt > 0) {
+      picksHtml = `<span class="picks">${counts.primary} <span class="alt">(+${counts.alt} alt)</span></span>`;
+    } else {
+      picksHtml = `<span class="picks">${counts.primary}</span>`;
+    }
+
     html += `<div class="${rowCls}"${dataAttrs}>
       <span class="pos">${prefix}${pos}</span>
       <span class="player">${nameDecoration}${p.name}${tailPill}</span>
       <span class="thru-info">${thruStr}</span>
       <span class="sc ${cls}">${formatScore(p.score)}</span>
       <span class="prize">${prizeStr}</span>
+      ${picksHtml}
     </div>`;
   });
 
