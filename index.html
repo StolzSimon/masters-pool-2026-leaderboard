@@ -26,6 +26,7 @@
   thead th.center{text-align:center}
   tbody tr{cursor:pointer;transition:background .15s ease}
   tbody td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+  tbody td.name{white-space:normal}
   tbody tr:nth-child(even){background:var(--row-alt)}
   tbody tr:hover{background:#eef7f1!important}
   tbody tr.favorited{background:var(--highlight)!important;font-weight:600}
@@ -34,7 +35,8 @@
   .rank{font-family:'Playfair Display',serif;font-weight:700;font-size:1.1rem;color:var(--green);text-align:center;width:50px}
   .rank-1{color:var(--gold);font-size:1.35rem}
   .rank-2,.rank-3{color:var(--green-dark)}
-  .name{font-weight:600;font-size:.92rem}
+  .name{font-weight:600;font-size:.9rem;max-width:96px;white-space:normal;word-wrap:break-word;line-height:1.2}
+  @media(min-width:601px){.name{max-width:120px}}
   .pick{font-size:.78rem;text-align:center;padding:6px 4px;line-height:1.2}
   .pick .pick-line1{line-height:1.15;display:block}
   .pick .pos-label{font-weight:400;color:var(--muted);font-size:.68rem;margin-right:2px;font-variant-numeric:tabular-nums}
@@ -46,9 +48,11 @@
   .pick .pick-score.unknown{color:var(--muted)}
   .pick .pick-line3{display:flex;align-items:center;justify-content:center;gap:4px;line-height:1.15;flex-wrap:wrap}
   .pick .pick-prize{font-size:.66rem;color:#666;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.1px}
-  .alternate.pick .player-name{font-size:.76rem}
+  .alternate.pick .player-name{font-size:.76rem;white-space:nowrap;display:inline}
   .alternate.pick .pick-score{font-size:.88rem}
-  .alternate.pick .pick-prize{font-size:.62rem}
+  .alternate.pick .pick-prize{font-size:.62rem;white-space:nowrap}
+  .alternate.pick{min-width:78px;padding-left:6px;padding-right:6px}
+  .alternate.pick .pick-line1{white-space:nowrap}
   .status-chip{display:inline-block;font-size:.6rem;font-weight:700;padding:1px 4px;border-radius:3px;letter-spacing:.3px;line-height:1.3;font-variant-numeric:tabular-nums;vertical-align:baseline}
   .status-chip.chip-live{background:rgba(220,53,69,.12);color:#c62233;animation:chipPulse 1.8s ease-in-out infinite}
   .status-chip.chip-final{background:rgba(40,120,60,.12);color:#286e3e}
@@ -252,7 +256,7 @@
     Scores from ESPN &bull; Auto-refreshes every 5 minutes during tournament hours<br>
     Final pool placement is by total prize money earned, not strokes<br>
     <span id="footerTimestamp"></span><br>
-    <span class="version">App version 43 &bull; Built with Claude</span>
+    <span class="version">App version 45 &bull; Built with Claude</span>
   </div>
 
   <!-- Prize reconciliation panel (debug tool) — populated by loadLiveScores.
