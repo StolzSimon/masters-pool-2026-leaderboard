@@ -192,6 +192,16 @@
   @media(max-width:600px){.feedback-btn{bottom:10px;right:10px;font-size:.7rem;padding:6px 12px;border-width:1px;opacity:.7;font-weight:500}}
   @media(max-width:600px){.header h1{font-size:1.5rem}table{font-size:.78rem}tbody td,thead th{padding:12px 6px}.rank{font-size:1rem}.total{font-size:1rem}}
 </style>
+
+<!-- Vercel Web Analytics — plain-HTML setup. No npm package, no React
+     component. The first script defines a queue stub so any va() calls made
+     before the real script loads are captured; the second loads the real
+     tracker from Vercel's CDN. Only emits data when deployed on Vercel; locally
+     you'll see a 404 on /_vercel/insights/script.js, which is expected. -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
