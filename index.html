@@ -373,11 +373,11 @@
   #reconPanel .muted{color:var(--muted);font-style:italic}
 </style>
 
-<a href="/cdn-cgi/l/email-protection#f281869d9e88dc9387b2959f939b9edc919d9fcd81879098979186cfbf938186978081d7c0c2a29d9d9ed7c0c2b497979690939199" class="feedback-btn" title="Report an issue or send feedback">
+<a href="mailto:stolz.au@gmail.com?subject=Masters%20Pool%20Feedback" class="feedback-btn" title="Report an issue or send feedback">
   💬 Feedback
 </a>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ── Pool entries ──
 const ENTRIES = [
   {name:"Ainge, Terry",picks:["Aberg","Rahm","Schauffele","Scheffler"],alt:"Fleetwood"},
@@ -591,32 +591,32 @@ function formatPrizeFull(amount) {
 // unreachable). When updating for a new day: copy today's FALLBACK_SCORES
 // into PREV_DAY_SCORES, then update FALLBACK_SCORES with the new day's data.
 const PREV_DAY_SCORES = {
-  // End of Round 3 (Saturday April 11, 2026)
-  "Aberg":     { prizeMoney: 211219  },
+  // End of Round 2 (Friday April 10, 2026)
+  "Aberg":     { prizeMoney: 174094  },
   "Bhatia":    { prizeMoney:  25000  },
-  "Conners":   { prizeMoney:  74250  },
+  "Conners":   { prizeMoney:  57938  },
   "DeChambeau":{ prizeMoney:  25000  },
-  "Fitzpatrick":{prizeMoney: 211219  },
-  "Fleetwood": { prizeMoney: 348750  },
-  "Gotterup":  { prizeMoney: 211219  },
+  "Fitzpatrick":{prizeMoney: 262125  },
+  "Fleetwood": { prizeMoney: 930000  },
+  "Gotterup":  { prizeMoney: 435000  },
   "Hojgaard":  { prizeMoney:  25000  },
-  "Hovland":   { prizeMoney:  92250  },
-  "Kim":       { prizeMoney:  65250  },
-  "Koepka":    { prizeMoney: 348750  },
+  "Hovland":   { prizeMoney:  90000  },
+  "Kim":       { prizeMoney:  57938  },
+  "Koepka":    { prizeMoney: 435000  },
   "Lee":       { prizeMoney:  25000  },
   "MacIntyre": { prizeMoney:  25000  },
-  "Matsuyama": { prizeMoney: 149625  },
-  "McIlroy":   { prizeMoney: 3465000 },
-  "Morikawa":  { prizeMoney: 472500  },
-  "Rahm":      { prizeMoney:  58950  },
-  "Reed":      { prizeMoney: 607500  },
-  "Rose":      { prizeMoney: 855000  },
+  "Matsuyama": { prizeMoney: 348750  },
+  "McIlroy":   { prizeMoney: 4500000 },
+  "Morikawa":  { prizeMoney: 262125  },
+  "Rahm":      { prizeMoney:  57938  },
+  "Reed":      { prizeMoney: 1980000 },
+  "Rose":      { prizeMoney: 930000  },
   "Schauffele":{ prizeMoney: 348750  },
-  "Scheffler": { prizeMoney: 725625  },
-  "Young":     { prizeMoney: 3465000 },
+  "Scheffler": { prizeMoney: 174094  },
+  "Young":     { prizeMoney: 631875  },
   "Zalatoris": { prizeMoney: 0       }
 };
-const BASELINE_LABEL = "Saturday"; // Shown in tooltips and snapshot cards
+const BASELINE_LABEL = "Friday"; // Shown in tooltips and snapshot cards
 
 // ── Baseline ranks (end of previous day) ──
 // Used to show per-entry movement indicators (▲/▼) in the live standings.
@@ -2038,4 +2038,10 @@ document.getElementById("reconToggleBtn").addEventListener("click", () => {
   const btn = document.getElementById("reconToggleBtn");
   const isOpen = panel.style.display !== "none";
   panel.style.display = isOpen ? "none" : "block";
-  btn.textC
+  btn.textContent = isOpen ? "🔍 Prize Reconciliation" : "✕ Hide Reconciliation";
+  if (!isOpen) panel.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+</script>
+</body>
+</html>
